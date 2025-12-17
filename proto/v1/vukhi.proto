@@ -1,0 +1,228 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "game/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+message VuKhi {
+  int32  ma_vu_khi          = 1;   
+  string ten_vu_khi         = 2;
+  int32  sat_thuong_co_ban  = 3;
+  double toc_do_danh        = 4;
+  int32  tam_danh           = 5;
+  string mo_ta              = 6;
+
+  int32  ma_loai            = 7;
+  int32  ma_do_hiem         = 8;
+  int32  ma_he              = 9;
+
+  // Thông tin "edges" (join) để hiển thị (nếu có)
+  string ten_loai           = 20;
+  string ten_do_hiem        = 21;
+  string ten_he             = 22;
+  double sat_thuong_bonus   = 23;
+  double toc_do_danh_bonus  = 24;
+  int32  so_luong           = 25;
+  string mau_sac            = 26;
+  int32 cap_bac             = 27;
+}
+
+message TaoVuKhiRequest {
+  string ten_vu_khi         = 1;
+  int32  sat_thuong_co_ban  = 2;
+  double toc_do_danh        = 3;
+  int32  tam_danh           = 4;
+  string mo_ta              = 5; 
+  int32  ma_loai            = 6;  
+  int32  ma_do_hiem         = 7; 
+  int32  ma_he              = 8; 
+}
+
+message CapNhatTheoTenVuKhiRequest {
+  string name               = 1;
+
+  string ten_vu_khi         = 2;
+  int32  sat_thuong_co_ban  = 3;
+  double toc_do_danh        = 4;
+  int32  tam_danh           = 5;
+  string mo_ta              = 6;
+  int32  ma_loai            = 7;
+  int32  ma_do_hiem         = 8;
+  int32  ma_he              = 9;
+}
+
+message XoaTheoTenVuKhiRequest {
+  string name = 1;
+}
+
+message XoaTheoTenVuKhiResponse {
+  string deleted_name = 1;
+}
+
+message LayTatCaRequest {
+  string q = 1;
+}
+
+message DanhSachVuKhi {
+  int32 total       = 1;
+  int32  item_count     = 2;
+  repeated VuKhi items = 3;
+  string next_cursor     = 4; 
+  bool   has_more        = 5; 
+
+}
+
+message DanhSachIntVuKhi {
+  int32 total        = 1;
+  repeated int32 items = 2;
+}
+
+message DanhSachStringVuKhi {
+  int32 total          = 1;
+  repeated string items = 2;
+}
+
+message DanhSachDoubleVuKhi {
+  int32 total          = 1;
+  repeated double items = 2;
+}
+
+message TimKiemRequest {
+  // ---- Vũ khí / khóa ngoại (EQ) ----
+  google.protobuf.Int32Value  ma_vu_khi         = 1;
+  google.protobuf.Int32Value  ma_loai           = 2;
+  google.protobuf.Int32Value  ma_he             = 3;
+  google.protobuf.Int32Value  ma_do_hiem        = 4; 
+
+  // ---- Tên/chuỗi chứa ----
+  string ten_vu_khi = 5;
+  string ten_loai   = 6;
+  string ten_he     = 7;
+  string ten_do_hiem= 8; 
+
+  // ---- Thuộc tính vũ khí (EQ) ----
+  google.protobuf.Int32Value   sat_thuong_co_ban = 9;
+  google.protobuf.DoubleValue  toc_do_danh       = 10;
+  google.protobuf.Int32Value   tam_danh          = 11;
+
+  // ---- Thuộc tính độ hiếm (EQ) ----
+  string                       mau_sac           = 12;
+  google.protobuf.DoubleValue  sat_thuong_bonus  = 13;
+  google.protobuf.DoubleValue  toc_do_danh_bonus = 14;
+  google.protobuf.Int32Value   so_luong          = 15;
+
+  // ---- Range có sẵn cho vũ khí ----
+  google.protobuf.Int32Value   min_sat_thuong_co_ban        = 16; 
+  google.protobuf.Int32Value   max_sat_thuong_co_ban        = 17; 
+
+  google.protobuf.DoubleValue min_toc_do_danh        = 18;
+  google.protobuf.DoubleValue max_toc_do_danh        = 19; 
+
+  google.protobuf.Int32Value  min_tam_danh           = 20; 
+  google.protobuf.Int32Value  max_tam_danh           = 21; 
+
+  // ---- Phân trang ----
+  int32  limit   = 22;
+  reserved 23;  
+  string cursor  = 24;
+
+  // Range cho 6 trường Độ Hiếm
+  // 1) ten_do_hiem 
+  string min_ten_do_hiem = 50;
+  string max_ten_do_hiem = 51;
+
+  // 2) so_luong 
+  google.protobuf.Int32Value  min_so_luong           = 52;
+  google.protobuf.Int32Value  max_so_luong           = 53;
+
+  // 3) sat_thuong_bonus
+  google.protobuf.DoubleValue min_sat_thuong_bonus   = 54;
+  google.protobuf.DoubleValue max_sat_thuong_bonus   = 55;
+
+  // 4) toc_do_danh_bonus
+  google.protobuf.DoubleValue min_toc_do_danh_bonus  = 56;
+  google.protobuf.DoubleValue max_toc_do_danh_bonus  = 57;
+
+  // 5) mau_sac
+  string min_mau_sac = 58;
+  string max_mau_sac = 59;
+
+  // 6) cap_bac 
+  google.protobuf.Int32Value  min_cap_bac            = 60;
+  google.protobuf.Int32Value  max_cap_bac            = 61;
+
+  string arrange_asc  = 70; // ASC cho các trường hợp lệ
+  string arrange_desc = 71; // DESC cho các trường hợp lệ
+}
+
+service VuKhiService {
+  // POST /vukhi/ent/post
+  rpc CreateVuKhi (TaoVuKhiRequest) returns (VuKhi) {
+    option (google.api.http) = {
+      post: "/vukhi/ent/post"
+      body: "*"
+    };
+  }
+
+  // PUT /vukhi/ent/put-by-name/{name}
+  rpc UpdateByNameVuKhi (CapNhatTheoTenVuKhiRequest) returns (VuKhi) {
+    option (google.api.http) = {
+      put: "/vukhi/ent/put-by-name/{name}"
+      body: "*"
+    };
+  }
+
+  // DELETE /vukhi/ent/delete-by-name/{name}
+  rpc DeleteByNameVuKhi (XoaTheoTenVuKhiRequest) returns (XoaTheoTenVuKhiResponse) {
+    option (google.api.http) = {
+      delete: "/vukhi/ent/delete-by-name/{name}"
+    };
+  }
+
+  // GET /vukhi/ent/getall?q=...
+  rpc GetAllVuKhi (LayTatCaRequest) returns (DanhSachVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/getall"
+    };
+  }
+
+  // GET /vukhi/ent/ten
+  rpc GetAllTenVuKhi (google.protobuf.Empty) returns (DanhSachStringVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/ten"
+    };
+  }
+
+  // GET /vukhi/ent/satthuongcoban
+  rpc GetAllSatThuongCoBan (google.protobuf.Empty) returns (DanhSachIntVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/satthuongcoban"
+    };
+  }
+
+  // GET /vukhi/ent/tocdo
+  rpc GetAllTocDoDanh (google.protobuf.Empty) returns (DanhSachDoubleVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/tocdo"
+    };
+  }
+
+  // GET /vukhi/ent/tamdanh
+  rpc GetAllTamDanh (google.protobuf.Empty) returns (DanhSachIntVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/tamdanh"
+    };
+  }
+
+  // POST /vukhi/ent/search
+  rpc Search (TimKiemRequest) returns (DanhSachVuKhi) {
+    option (google.api.http) = {
+      post: "/vukhi/ent/search"
+      body: "*"
+    };
+  }
+}

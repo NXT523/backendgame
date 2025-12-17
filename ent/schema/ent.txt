@@ -1,0 +1,140 @@
+# ent
+      + Ent (EntGO) là một ORM (Object–Relational Mapping) cho Go, được Meta (Facebook) phát triển, theo code-first approach, 
+      nghĩa là bạn viết code định nghĩa schema → Ent sẽ generate code để bạn thao tác với CSDL thông qua các hàm Go type-safe.
+
+      Ent gồm 3 thành phần chính:
+
+      Thành phần	                              Vai trò
+      Schema	                        Bạn định nghĩa các bảng (struct) và các trường (field) trong Go code.
+      Entc (Ent Compiler)	            Công cụ đọc schema và sinh code CRUD, query builder, predicate…
+      Runtime Client	                  Bộ hàm để bạn kết nối DB, chạy query, insert, update…
+
+// cd đến đường dẫn tạo file    //cd go_base/18_ORM_DB_Access/ORMs/entdemo
+      1:go mod init go_base_19            # B1: Tạo module
+      2.0:chưa chạy lần nào thì chạy go install entgo.io/ent/cmd/ent@latest
+      $env:PATH += ";$HOME\go\bin"
+      2:go get entgo.io/ent@latest        # B2: Cài Ent ORM CLI & thư viện
+      3:ent new User                      # B3: Tạo schema đầu tiên (tên bảng)
+      4:ent generate ./ent/schema         # B4: Generate code
+      5:go mod tidy                       # B5: Đồng bộ dependencies
+      6:ent new Name                      # B6: Tạo schema tiếp theo nếu bạn muốn 
+      7:ent generate ./ent/schema         # B7: Generate code lại sau khi thêm schema mới hoặc khi sửa 
+      8:go mod tidy                       # B8: Đồng bộ dependencies lại sau khi thêm schema mới hoặc khi sửa 
+
+1. Create – Thêm dữ liệu
+   Mỗi bảng (schema) sẽ có builder .Create() với các method Set, Add để gán giá trị.
+
+Method                              Giải thích                                                              Ví dụ
+.Create()                           Bắt đầu tạo bản ghi mới                                                 client.User.Create()
+.Set<FieldName>(value)              Gán giá trị cho field (bắt buộc dùng cho field NotEmpty, Required)      .SetName("A")
+.SetNillable<FieldName>(\*value)    Gán giá trị cho field cho phép nil (nullable)                           .SetNillableAge(&age)
+.SetDefault<FieldName>(value)       (trong schema) Gán giá trị mặc định khi không set
+.Add<FieldName>(...)                Gán dữ liệu cho mối quan hệ many-to-many                                .AddFriends(u1, u2)
+.Save(ctx)                          Lưu vào DB, trả về entity vừa tạo                                       user, _ := client. User.Create().SetName("A").Save(ctx)
+.SaveX(ctx)                         Lưu nhưng panic nếu lỗi (ít dùng trong production)
+.Exec(ctx)                          Lưu nhưng không trả về dữ liệu
+
+Create – Thêm dữ liệu
+.Create()                // Bắt đầu tạo
+.Set<FieldName>(value)   // Gán giá trị bắt buộc
+.SetNillable<FieldName>()// Gán giá trị nullable
+.Add<FieldName>(...)     // Gán mối quan hệ
+.Save(ctx)               // Lưu & trả về entity
+.SaveX(ctx)              // Lưu & panic nếu lỗi
+.Exec(ctx)               // Lưu không trả về entity
+
+
+2. Query – Truy vấn dữ liệu
+Dùng client.<Entity>.Query() để lấy dữ liệu.
+
+Method	                                     Giải thích	                                                   Ví dụ
+.All(ctx)	                          Lấy tất cả bản ghi	                                                users, _ := client.User.Query().All(ctx)
+.First(ctx)	                          Lấy bản ghi đầu tiên (hoặc lỗi nếu rỗng)	
+.FirstX(ctx)	                       Giống First nhưng panic nếu lỗi	
+.FirstID(ctx)	                       Lấy ID bản ghi đầu tiên	
+.Only(ctx)	                          Chỉ cho phép trả về đúng 1 bản ghi, nếu nhiều hơn sẽ lỗi	
+.OnlyX(ctx)	                          Giống Only nhưng panic nếu lỗi	
+.OnlyID(ctx)	                       Chỉ lấy ID, nếu nhiều hơn 1 sẽ lỗi	
+.Count(ctx)	                          Đếm số bản ghi	
+.Exist(ctx)	                          Kiểm tra có tồn tại không	
+.Where(...)	                          Thêm điều kiện lọc (bắt buộc import ent/<Entity>/predicate)	      .Where(user.NameEQ("A"))
+`.Order(ent.Desc	                    Asc(field))`	                                                      Sắp xếp
+.Limit(n)	                          Giới hạn số bản ghi	                                             .Limit(10)
+.Offset(n)	                          Bỏ qua n bản ghi (pagination)	
+.Select(fields...)	                 Chỉ lấy một số cột	                                                .Select(user.FieldName, user.FieldAge)
+.With<Relation>()	                    Eager loading (load quan hệ liên quan)	                           .WithPosts()
+.GroupBy(fields...)	                 Gom nhóm (aggregation)	                                          .GroupBy(user.FieldAge)
+.Aggregate(funcs...)	                 Tính toán (SUM, COUNT, AVG)	                                       .Aggregate(ent.Count())
+
+Query – Truy vấn dữ liệu
+
+.All(ctx)                 // Lấy tất cả bản ghi
+.First(ctx)               // Lấy bản ghi đầu tiên (lỗi nếu không có)
+.FirstX(ctx)              // Giống First nhưng panic nếu lỗi
+.FirstID(ctx)             // Lấy ID bản ghi đầu tiên
+.Only(ctx)                // Chỉ cho phép trả về đúng 1 bản ghi (lỗi nếu nhiều hơn)
+.OnlyX(ctx)               // Giống Only nhưng panic nếu lỗi
+.OnlyID(ctx)              // Chỉ lấy ID, lỗi nếu nhiều hơn 1
+.Count(ctx)               // Đếm số bản ghi
+.Exist(ctx)               // Kiểm tra có tồn tại không
+.Where(...)               // Lọc theo điều kiện (vd: .Where(user.NameEQ("A")))
+.Order(ent.Desc|Asc(...)) // Sắp xếp theo trường (tăng/giảm dần)
+.Limit(n)                 // Giới hạn số bản ghi trả về
+.Offset(n)                // Bỏ qua n bản ghi (dùng pagination)
+.Select(fields...)        // Chỉ lấy một số cột nhất định
+.With<Relation>()         // Eager loading – load luôn quan hệ liên quan (vd: .WithPosts())
+.GroupBy(fields...)       // Gom nhóm kết quả theo trường
+.Aggregate(funcs...)      // Tính toán SUM, COUNT, AVG... trên nhóm dữ liệu
+
+3. Update – Cập nhật dữ liệu
+Có 2 dạng: UpdateOne (1 bản ghi) và Update (nhiều bản ghi).
+
+Method	                           Giải thích	                                       Ví dụ
+.Update()	                        Cập nhật nhiều bản ghi theo điều kiện	         client.User.Update().Where(user.AgeLT(18)).SetAge(18).Save(ctx)
+.UpdateOne(entity)	               Cập nhật 1 entity đã query	
+.UpdateOneID(id)	                  Cập nhật bản ghi theo ID	
+.Set<FieldName>(value)	            Gán giá trị mới	                              .SetName("B")
+.Add<FieldName>(value)	            Tăng giá trị số hiện tại	                     .AddAge(1)
+.Clear<FieldName>()	               Xóa giá trị nullable	
+.Save(ctx)	                        Thực hiện cập nhật	
+.SaveX(ctx)	                        Panic nếu lỗi
+
+Update – Cập nhật dữ liệu
+
+.Update()               // Cập nhật nhiều bản ghi theo điều kiện
+.UpdateOne(entity)      // Cập nhật 1 entity đã query
+.UpdateOneID(id)        // Cập nhật bản ghi theo ID
+.Set<FieldName>(value)  // Gán giá trị mới cho field
+.Add<FieldName>(value)  // Cộng thêm giá trị số hiện tại
+.Clear<FieldName>()     // Xóa giá trị nullable
+.Save(ctx)              // Thực hiện cập nhật
+.SaveX(ctx)             // Thực hiện cập nhật, panic nếu lỗi
+
+4. Delete – Xóa dữ liệu
+Cũng có 2 dạng: DeleteOne và Delete.
+
+Method	                     Giải thích	                                             Ví dụ
+.Delete()	                  Xóa nhiều bản ghi theo điều kiện	                     client.User.Delete().Where(user.AgeLT(18)).Exec(ctx)
+.DeleteOne(entity)	         Xóa 1 bản ghi đã query	
+.DeleteOneID(id)	            Xóa theo ID	
+.Exec(ctx)	                  Thực hiện xóa (không trả dữ liệu)	
+.ExecX(ctx)	                  Panic nếu lỗi
+
+Delete – Xóa dữ liệu
+
+.Delete()              // Xóa nhiều bản ghi theo điều kiện
+.DeleteOne(entity)     // Xóa 1 bản ghi đã query
+.DeleteOneID(id)       // Xóa bản ghi theo ID
+.Exec(ctx)             // Thực hiện xóa (không trả dữ liệu)
+.ExecX(ctx)            // Thực hiện xóa, panic nếu lỗi
+
+
+5. Method của context (Go chuẩn, không riêng Ent)
+Method	                                 Thuộc về	     Ý nghĩa	                                                         Ví dụ
+context.Background()	                     context	     Tạo context gốc rỗng, không có timeout hoặc cancel.	               ctx := context.Background()
+context.WithTimeout(ctx, time.Second*5)	context	     Tạo context có thời gian sống tối đa (timeout), hết giờ sẽ hủy.	   ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+context.WithCancel(ctx)	                  context	     Tạo context có thể hủy thủ công bằng cancel().	                  ctx, cancel := context.WithCancel(context.Background())
+context.WithValue(ctx, key, value)	      context	     Tạo context chứa dữ liệu key-value (truyền metadata).	            ctx = context.WithValue(ctx, "userID", 123)
+
+
+6. Các loại in thông báo 

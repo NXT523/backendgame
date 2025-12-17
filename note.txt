@@ -1,0 +1,23 @@
+1. index tối ưu cho các trường hợp query
+2. thêm query bằng name
+3. 1 query có xử lý được nhiều filter không(mỗi filter là giá trị từ 1 bảng) 
+4. go tool pprof (heap,goroutine)
+
+5. Mapping cho key mysql có dạng string nhưng có phân cấp (ví dụ tên độ hiếm (1-10))
+6. grpc gate way cho các http api hiện tại
+7. redis memcached 
+
+8.interceptor grpc 
+9. message broker kafka
+10. elk 
+
+
+
+đọc cơ chế sao message bị đẩy lại khi nào hoàn thành khi nào không( chỗ nào)
+cấu hình mapping index trong elastic search
+elastic search cách tạo index như nào cho hợp lý , limit = gì tại sao
+
+load balancer
+reverse proxy
+injection request
+ratelimit

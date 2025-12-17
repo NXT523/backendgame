@@ -1,0 +1,11 @@
+ELK = Elasticsearch + Logstash + Kibana 
+— bộ công cụ phổ biến để thu thập, lưu trữ, tìm kiếm và trực quan hóa dữ liệu log / sự kiện / telemetry.
+Thành phần chính
+    + Elasticsearch
+    Công cụ lưu trữ và tìm kiếm dạng phân tán (search engine + document store). Index dữ liệu, query nhanh, dùng cho analytics thời gian thực.
+
+    + Logstash
+    Pipeline thu thập và xử lý log: input → filter (parse, enrich, grok, date, fields) → output. Dùng để ingest dữ liệu từ nhiều nguồn, chuyển định dạng, gửi vào Elasticsearch hoặc nơi khác.
+
+    + Kibana
+    Giao diện web để trực quan hóa, dashboard, khám phá log, chạy query, alerting và quản trị cluster Elasticsearch.

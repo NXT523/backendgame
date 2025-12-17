@@ -1,0 +1,6 @@
+Interceptor là một middleware giữa transport và handler gRPC — cho phép bạn “chặn” (intercept) 
+các cuộc gọi để làm việc chung như: 
+    xác thực, logging, metrics, retry, rate-limit, sanitize input, xử lý lỗi/panic, v.v. 
+    Có 2 loại chính:
+        + Unary interceptor — cho các RPC kiểu unary (1 request → 1 response).
+        + Stream interceptor — cho các RPC kiểu stream (client, server hoặc bidi streaming).

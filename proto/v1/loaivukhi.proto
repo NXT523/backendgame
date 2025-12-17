@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package v1;
+option go_package = "game/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+message LoaiVuKhi {
+  int32  ma_loai     = 1; 
+  string ten_loai = 2;
+  string mo_ta  = 3;
+}
+
+message TaoLoaiVuKhiRequest{
+    int32 ma_loai = 1;
+    string ten_loai = 2;
+    string mo_ta = 3;
+}
+
+message CapNhatTheoTenLoaiVuKhiRequest {
+  string name               = 1;
+
+  string ten_loai  = 2;
+  string mo_ta       = 3;
+}
+
+message XoaTheoTenLoaiVuKhiRequest {
+  string name = 1;
+}
+
+message XoaTheoTenLoaiVuKhiResponse {
+  string deleted_name = 1;
+}
+
+message DanhSachLoaiVuKhi {
+  int32 total = 1;
+  repeated LoaiVuKhi items = 2;
+}
+
+message DanhSachStringLoaiVuKhi {
+  int32 total          = 1;
+  repeated string items = 2;
+}
+
+message TimKiemLoaiVuKhiRequest {
+  google.protobuf.Int32Value ma_loai = 1;
+  string                     ten_loai = 2;
+  string                     mo_ta    = 3;
+  string                     q        = 4; 
+}
+
+service LoaiVuKhiService {
+  // POST /loaivukhi/ent/post
+  rpc CreateLoaiVuKhi (TaoLoaiVuKhiRequest) returns (LoaiVuKhi){
+  option (google.api.http) = {
+      post: "/loaivukhi/ent/post"
+      body: "*"
+    };
+  }
+
+  // PUT /loaivukhi/ent/put-by-name/{name}
+  rpc UpdateByNameLoaiVuKhi (CapNhatTheoTenLoaiVuKhiRequest) returns (LoaiVuKhi) {
+    option (google.api.http) = {
+      put: "/loaivukhi/ent/put-by-name/{name}"
+      body: "*"
+    };
+  }
+
+  // DELETE /loaivukhi/ent/delete-by-name/{name}
+  rpc DeleteByNameLoaiVuKhi (XoaTheoTenLoaiVuKhiRequest) returns (XoaTheoTenLoaiVuKhiResponse) {
+    option (google.api.http) = {
+      delete: "/loaivukhi/ent/delete-by-name/{name}"
+    };
+  }
+
+  // GET /loaivukhi/ent/getall
+  rpc GetAllLoaiVuKhi (google.protobuf.Empty) returns (DanhSachLoaiVuKhi) {
+    option (google.api.http) = {
+      get: "/loaivukhi/ent/getall"
+    };
+  }
+
+  // GET /loaivukhi/ent/ten
+  rpc GetAllTenLoaiVuKhi (google.protobuf.Empty) returns (DanhSachStringLoaiVuKhi) {
+    option (google.api.http) = {
+      get: "/loaivukhi/ent/ten"
+    };
+  }
+
+  // GET /loaivukhi/ent/mota
+  rpc GetAllMoTaLoaiVuKhi (google.protobuf.Empty) returns (DanhSachStringLoaiVuKhi) {
+    option (google.api.http) = {
+      get: "/loaivukhi/ent/mota"
+    };
+  }
+
+  // POST /loaivukhi/ent/search
+    rpc SearchLoaiVuKhi (TimKiemLoaiVuKhiRequest) returns (DanhSachLoaiVuKhi) {
+    option (google.api.http) = {
+        post: "/loaivukhi/ent/search"
+        body: "*"
+    };
+    }
+}

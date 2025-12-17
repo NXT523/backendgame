@@ -1,0 +1,65 @@
+1. Cách tạo Index hợp lý (Best Practices)
+    Một index "hợp lý" cần cân bằng giữa tốc độ tìm kiếm (Search speed) và tốc độ ghi (Indexing speed).
+
+A. Settings: Số lượng Shard và Replica
+    Khi tạo index, bạn cần định nghĩa settings:
+    + number_of_shards: Chia nhỏ dữ liệu ra để xử lý song song.
+        Lời khuyên: Với dữ liệu dưới 50GB, 1 primary shard là đủ. Đừng để mặc định (thường là 5) vì nó gây lãng phí tài nguyên quản lý.
+    + number_of_replicas: Bản sao dự phòng.
+        Lời khuyên: Để là 1 cho Production (đảm bảo an toàn). Để là 0 khi đang dev/test để tiết kiệm ổ cứng.
+
+B. Mappings: Định nghĩa kiểu dữ liệu (Quan trọng nhất)
+    Đừng để ES tự đoán (Dynamic Mapping). Hãy khai báo thủ công (Explicit Mapping). Quy tắc vàng phân biệt text và keyword:
+
+Kiểu dữ liệu              Mô tả	                                    Dùng khi nào?	                                            Ví dụ
+keyword	        Lưu y nguyên chuỗi,                         Dùng để lọc chính xác (Filter),                         user_id, status, email, game_code
+                không cắt từ,                               gom nhóm (Aggregation), 
+                không phân tích.	                        sắp xếp (Sorting).	
+
+text	        Bị cắt nhỏ thành các token (analyze).	    Dùng để tìm kiếm toàn văn (Full-text search),           description, message, content
+                                                            tìm gần đúng.	
+
+
+2. Limit trong Elasticsearch là gì? Tại sao cần nó?
+Tại sao có Limit và tại sao mặc định nó thấp?
+    Hiệu năng (Performance):
+        + ES là hệ thống phân tán. Khi bạn request size: 100, ES phải lấy 100 kết quả từ mỗi shard, 
+        tập hợp lại tại node điều phối (coordinating node), sắp xếp lại rồi mới trả về cho bạn.
+    
+        + Nếu bạn để size: 1,000,000, nó sẽ làm tràn bộ nhớ (RAM) và có thể làm sập node.
+
+    Giới hạn 10,000 (Deep Paging Problem):
+        + Mặc định, from + size không được vượt quá 10,000.
+        + Tại sao? 
+            Để lấy kết quả từ 10,000 đến 10,010, ES thực chất phải tìm và sắp xếp 10,010 bản ghi trong bộ nhớ 
+            rồi vứt bỏ 10,000 cái đầu. Chi phí này tăng theo cấp số nhân.
+        + Giải pháp 
+            Nếu muốn lấy nhiều hơn 10k: Sử dụng search_after hoặc Scroll API.
+
+
+
+"settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1
+}
+number_of_shards: 1 (Phân mảnh)
+    Khái niệm: Shard là việc "xé nhỏ" cuốn từ điển ra thành nhiều tập mỏng hơn.
+    Tại sao cần Shard?
+        + Nếu cuốn từ điển nặng 100TB, không ổ cứng nào chứa nổi. Bạn phải xé nó ra làm 5 phần (5 shards), 
+        mỗi phần 20TB và để trên 5 máy chủ khác nhau.
+        + Khi tìm kiếm, 5 máy cùng tìm song song $\rightarrow$ Tốc độ nhanh gấp 5 lần.
+    Ý nghĩa số 1:
+        + Bạn bảo Elasticsearch: "Dữ liệu của tôi ít, không cần xé nhỏ ra. Hãy giữ nguyên nó thành 1 cục duy nhất."
+        + Ưu điểm: Tiết kiệm tài nguyên quản lý. Tối ưu cho dữ liệu nhỏ (dưới 30GB-50GB).
+        + Nhược điểm: Nếu dữ liệu phình to quá giới hạn ổ cứng của 1 server, bạn sẽ gặp rắc rối lớn 
+        vì số lượng Shard không thể thay đổi sau khi tạo index (muốn đổi phải tạo index mới và copy dữ liệu sang - Reindex).
+
+number_of_replicas: 1 (Bản sao)
+    Khái niệm: Replica là việc "photo copy" các shard ra để dự phòng.
+    Tại sao cần Replica?
+        + An toàn (High Availability): Nếu server chứa bản chính (Primary Shard) bị cháy ổ cứng, hệ thống sẽ tự động chuyển bản phụ (Replica) lên làm bản chính. Dữ liệu không bị mất.
+        + Tăng tốc độ đọc: Khi có nhiều người tìm kiếm cùng lúc, ES có thể chia tải: người A tìm ở bản chính, người B tìm ở bản sao.
+    Ý nghĩa số 1:
+        + Bạn bảo Elasticsearch: "Với mỗi mảnh dữ liệu chính, hãy tạo cho tôi 1 bản sao lưu."
+        + Tổng cộng: Bạn sẽ có 2 bản dữ liệu (1 chính + 1 phụ).
+        + Lưu ý: Replica có thể thay đổi bất cứ lúc nào (không giống Shard).

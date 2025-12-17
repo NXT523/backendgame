@@ -1,0 +1,211 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1,
+    "analysis": {
+      "analyzer": {
+        "vietnamese_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "text_field": {
+        "type": "text",
+        "analyzer": "vietnamese_analyzer",
+        "copy_to": "all_text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "all_text": {
+        "type": "text",
+        "analyzer": "vietnamese_analyzer"
+      },
+      "keyword_field": {
+        "type": "keyword",
+        "copy_to": "all_text"
+      },
+      "long_field": {
+        "type": "long"
+      },
+      "integer_field": {
+        "type": "integer"
+      },
+      "short_field": {
+        "type": "short"
+      },
+      "byte_field": {
+        "type": "byte"
+      },
+      "double_field": {
+        "type": "double"
+      },
+      "float_field": {
+        "type": "float"
+      },
+      "half_float_field": {
+        "type": "half_float"
+      },
+      "scaled_float_field": {
+        "type": "scaled_float",
+        "scaling_factor": 100
+      },
+      "date_field": {
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss'Z'||yyyy-MM-dd HH:mm:ss||dd-MM-yyyy||dd/MM/yyyy||yyyy/MM/dd||yyyy-MM-dd||MM-yyyy||epoch_millis"
+      },
+      "date_nanos_field": {
+        "type": "date_nanos"
+      },
+      "boolean_field": {
+        "type": "boolean"
+      },
+    
+      "binary_field": {
+        "type": "binary",
+        "fields": {
+          "keyword": {
+            "type": "text"
+          }
+        }
+      },
+      "integer_range_field": {
+        "type": "integer_range"
+      },
+      "float_range_field": {
+        "type": "float_range"
+      },
+      "long_range_field": {
+        "type": "long_range"
+      },
+      "double_range_field": {
+        "type": "double_range"
+      },
+      "date_range_field": {
+        "type": "date_range"
+      },
+      "ip_range_field": {
+        "type": "ip_range"
+      },
+      "object_field": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "text",
+            "copy_to": "all_text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          },
+          "value": {
+            "type": "integer"
+          }
+        }
+      },
+      "nested_field": {
+        "type": "nested",
+        "properties": {
+          "child_name": {
+            "type": "text",
+            "copy_to": "all_text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          }
+        }
+      },
+      
+      "geo_point_field": {
+        "type": "geo_point"
+      },
+      "geo_shape_field": {
+        "type": "geo_shape"
+      },
+      "ip_field": {
+        "type": "ip"
+      },
+      "completion_field": {
+        "type": "completion"
+      },
+      "token_count_field": {
+        "type": "token_count",
+        "analyzer": "standard"
+      },
+      "percolator_field": {
+        "type": "percolator"
+      },
+      "join_field": {
+        "type": "join",
+        "relations": {
+          "parent": "child"
+        }
+      },
+      "rank_feature_field": {
+        "type": "rank_feature"
+      },
+      "rank_features_field": {
+        "type": "rank_features"
+      },
+      "dense_vector_field": {
+        "type": "dense_vector",
+        "dims": 9,
+        "index": false
+      },
+      "sparse_vector_field": {
+        "type": "sparse_vector"
+      },
+      "search_as_you_type_field": {
+        "type": "search_as_you_type",
+        "copy_to": "all_text"
+      },
+      "alias_field": {
+        "type": "alias",
+        "path": "keyword_field"
+      },
+      "flattened_field": {
+        "type": "flattened"
+      },
+      "shape_field": {
+        "type": "shape"
+      },
+      "point_field": {
+        "type": "point"
+      },
+      "version_field": {
+        "type": "version"
+      },
+      "aggregate_metric_double_field": {
+        "type": "aggregate_metric_double",
+        "metrics": ["min", "max", "sum", "value_count"],
+        "default_metric": "max"
+      },
+      "histogram_field": {
+        "type": "histogram"
+      },
+      "constant_keyword_field": {
+        "type": "constant_keyword",
+        "value": "constant_value"
+      },
+      "wildcard_field": {
+        "type": "wildcard",
+        "copy_to": "all_text"
+      },
+      "match_only_text_field": {
+        "type": "match_only_text",
+        "copy_to": "all_text"
+      }
+    }
+  }
+}

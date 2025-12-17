@@ -1,0 +1,27 @@
+Kafka (message broker bất đồng bộ)
+Apache Kafka là một message broker / distributed streaming platform 
+— nghĩa là một hệ thống để gửi, nhận và lưu trữ luồng (stream) của các thông điệp (messages) giữa 
+các ứng dụng theo cách phân tán, chịu lỗi và có thể mở rộng.
+
+    + Producer: thành phần gửi message vào Kafka.
+    + Consumer: thành phần nhận message từ Kafka.
+    + Topic: nơi chứa messages theo chủ đề (ví dụ orders, events.vukhi).
+    + Partition: mỗi topic chia thành nhiều partition — mỗi partition là một chuỗi (log) có thứ tự, giúp Kafka scale và cho phép parallelism.
+    + Offset: chỉ số số nguyên cho mỗi message trong partition — consumer dùng offset để theo dõi vị trí đã đọc.
+    + Broker: một node (server) chạy Kafka; nhiều broker tạo thành cluster.
+    + Replication: mỗi partition có thể được sao chép sang các broker khác để chịu lỗi — có leader/replica.
+    + Consumer group: nhiều consumer cùng group chia nhau đọc các partition (mỗi partition chỉ do 1 consumer trong group xử lý) — cách để scale xử lý.
+
+Kafka có một cấu hình trên server (Broker) tên là auto.create.topics.enable.
+Nếu cấu hình này là true (Mặc định):
+
+    + Producer: Khi Producer gửi tin nhắn đến một topic chưa tồn tại, Broker sẽ tự động tạo topic đó ngay lập tức để nhận tin nhắn. Đây là trường hợp phổ biến nhất trong môi trường Dev.
+    + Consumer: Khi Consumer cố gắng lắng nghe (subscribe) một topic chưa tồn tại, Broker cũng sẽ tự động tạo topic đó (tuy nhiên, topic này sẽ rỗng vì chưa có tin nhắn nào).
+    + Hệ quả: Topic được tạo ra sẽ sử dụng cấu hình mặc định (thường là 1 partition, 1 replication factor). Điều này rất tệ cho hiệu năng và độ an toàn dữ liệu.
+
+    Vai trò	                            Code/Function	                                Mục đích chính
+Producer/Writer	                kafkaWriter = TaoKafkaWriter(...)	            Gửi message lên topic Kafka
+
+Consumer	                    ChayConsumerXoaCacheVuKhi,                      Nhận message từ topic và xử lý
+                                ChayConsumerAuditVuKhi, 
+                                ChayConsumerDongBoVuKhi	
