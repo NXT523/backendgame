@@ -127,7 +127,7 @@ func (rl *RateLimiter) RateLimitHTTP(next http.Handler) http.Handler {
 		ip := layIPHTTP(r)
 
 		if !rl.Allow(ip) {
-			http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+			http.Error(w, "Quá nhiều yêu cầu", http.StatusTooManyRequests)
 			return
 		}
 
@@ -167,7 +167,7 @@ func RateLimitGrpc(rl *RateLimiter) grpc.UnaryServerInterceptor {
 		if !rl.Allow(ip) {
 			return nil, status.Error(
 				codes.ResourceExhausted,
-				"Too Many Requests",
+				"Quá nhiều yêu cầu",
 			)
 		}
 

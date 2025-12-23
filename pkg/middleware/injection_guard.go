@@ -18,6 +18,12 @@ var (
 
 	// Path traversal
 	pathTravRe = regexp.MustCompile(`\.\./|\.\.\\`)
+
+	// SSTI / template injection
+	sstiRe = regexp.MustCompile(`(\{\{|\}\}|\$\(|\` + "`" + `)`)
+
+	// NoSQL injection phổ biến
+	nosqlInjectRe = regexp.MustCompile(`(?i)(\$(ne|gt|lt|gte|lte|or|and|where|regex|exists))`)
 )
 
 // InjectionGuard middleware cho reverse proxy
@@ -53,7 +59,10 @@ func InjectionGuard(next http.Handler) http.Handler {
 			}
 
 			bodyStr := strings.ToLower(string(bodyBytes))
-			if sqlInjectRe.MatchString(bodyStr) || xssRe.MatchString(bodyStr) {
+			if sqlInjectRe.MatchString(bodyStr) ||
+				xssRe.MatchString(bodyStr) ||
+				sstiRe.MatchString(bodyStr) ||
+				nosqlInjectRe.MatchString(bodyStr) {
 				http.Error(w, "Đã phát hiện tải trọng độc hại", http.StatusBadRequest)
 				return
 			}
