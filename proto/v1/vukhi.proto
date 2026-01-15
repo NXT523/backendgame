@@ -8,6 +8,8 @@ import "google/api/annotations.proto";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/empty.proto";
 
+
+
 message VuKhi {
   int32  ma_vu_khi          = 1;   
   string ten_vu_khi         = 2;
@@ -29,7 +31,10 @@ message VuKhi {
   int32  so_luong           = 25;
   string mau_sac            = 26;
   int32 cap_bac             = 27;
+  int64 version             = 99;
 }
+
+
 
 message TaoVuKhiRequest {
   string ten_vu_khi         = 1;
@@ -40,6 +45,8 @@ message TaoVuKhiRequest {
   int32  ma_loai            = 6;  
   int32  ma_do_hiem         = 7; 
   int32  ma_he              = 8; 
+
+  string idempotency_key = 100;
 }
 
 message CapNhatTheoTenVuKhiRequest {
@@ -53,14 +60,18 @@ message CapNhatTheoTenVuKhiRequest {
   int32  ma_loai            = 7;
   int32  ma_do_hiem         = 8;
   int32  ma_he              = 9;
+
+  int32 version = 99;
 }
 
 message XoaTheoTenVuKhiRequest {
   string name = 1;
+  
 }
 
 message XoaTheoTenVuKhiResponse {
   string deleted_name = 1;
+  int32  ma_vu_khi    = 2; 
 }
 
 message LayTatCaRequest {
@@ -89,6 +100,14 @@ message DanhSachStringVuKhi {
 message DanhSachDoubleVuKhi {
   int32 total          = 1;
   repeated double items = 2;
+}
+
+message LayVersionRequest {
+    string ten_vu_khi = 1;
+}
+
+message LayVersionResponse {
+    int32 version = 1;
 }
 
 message TimKiemRequest {
@@ -225,4 +244,12 @@ service VuKhiService {
       body: "*"
     };
   }
+
+  // service VuKhiService {
+  rpc LayVersion(LayVersionRequest) returns (LayVersionResponse) {
+    option (google.api.http) = {
+        get: "/vukhi/ent/version/{ten_vu_khi}"
+    };
+  }
+
 }

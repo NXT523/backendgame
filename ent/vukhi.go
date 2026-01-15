@@ -30,6 +30,8 @@ type VuKhi struct {
 	TamDanh int `json:"tam_danh,omitempty"`
 	// MoTa holds the value of the "mo_ta" field.
 	MoTa string `json:"mo_ta,omitempty"`
+	// Version holds the value of the "version" field.
+	Version int64 `json:"version,omitempty"`
 	// FK -> loai_vu_khis.ma_loai
 	MaLoai int `json:"ma_loai,omitempty"`
 	// FK -> do_hiems.ma_do_hiem
@@ -95,7 +97,7 @@ func (*VuKhi) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case vukhi.FieldTocDoDanh:
 			values[i] = new(sql.NullFloat64)
-		case vukhi.FieldID, vukhi.FieldSatThuongCoBan, vukhi.FieldTamDanh, vukhi.FieldMaLoai, vukhi.FieldMaDoHiem, vukhi.FieldMaHe:
+		case vukhi.FieldID, vukhi.FieldSatThuongCoBan, vukhi.FieldTamDanh, vukhi.FieldVersion, vukhi.FieldMaLoai, vukhi.FieldMaDoHiem, vukhi.FieldMaHe:
 			values[i] = new(sql.NullInt64)
 		case vukhi.FieldTenVuKhi, vukhi.FieldMoTa:
 			values[i] = new(sql.NullString)
@@ -149,6 +151,12 @@ func (_m *VuKhi) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field mo_ta", values[i])
 			} else if value.Valid {
 				_m.MoTa = value.String
+			}
+		case vukhi.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				_m.Version = value.Int64
 			}
 		case vukhi.FieldMaLoai:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -233,6 +241,9 @@ func (_m *VuKhi) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("mo_ta=")
 	builder.WriteString(_m.MoTa)
+	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Version))
 	builder.WriteString(", ")
 	builder.WriteString("ma_loai=")
 	builder.WriteString(fmt.Sprintf("%v", _m.MaLoai))

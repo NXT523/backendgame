@@ -18,8 +18,9 @@ import (
 // LoaiVuKhiUpdate is the builder for updating LoaiVuKhi entities.
 type LoaiVuKhiUpdate struct {
 	config
-	hooks    []Hook
-	mutation *LoaiVuKhiMutation
+	hooks     []Hook
+	mutation  *LoaiVuKhiMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the LoaiVuKhiUpdate builder.
@@ -145,6 +146,12 @@ func (_u *LoaiVuKhiUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *LoaiVuKhiUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *LoaiVuKhiUpdate {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *LoaiVuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -211,6 +218,7 @@ func (_u *LoaiVuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{loaivukhi.Label}
@@ -226,9 +234,10 @@ func (_u *LoaiVuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // LoaiVuKhiUpdateOne is the builder for updating a single LoaiVuKhi entity.
 type LoaiVuKhiUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *LoaiVuKhiMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *LoaiVuKhiMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetTenLoai sets the "ten_loai" field.
@@ -361,6 +370,12 @@ func (_u *LoaiVuKhiUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *LoaiVuKhiUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *LoaiVuKhiUpdateOne {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *LoaiVuKhiUpdateOne) sqlSave(ctx context.Context) (_node *LoaiVuKhi, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -444,6 +459,7 @@ func (_u *LoaiVuKhiUpdateOne) sqlSave(ctx context.Context) (_node *LoaiVuKhi, er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(_u.modifiers...)
 	_node = &LoaiVuKhi{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

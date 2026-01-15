@@ -66,6 +66,12 @@ func (l *LoggerElastic) Ghi(ctx context.Context, level, message string, kv map[s
 		"message":             message, // ví dụ: "HTTP request handled"
 	}
 	for k, v := range kv {
+		if k == "error" {
+			if _, ok := v.(map[string]any); !ok {
+				// bỏ qua hoặc chuyển sang object rỗng
+				v = map[string]any{}
+			}
+		}
 		doc[k] = v
 	}
 	body, _ := json.Marshal(doc)

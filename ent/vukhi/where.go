@@ -79,6 +79,11 @@ func MoTa(v string) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldEQ(FieldMoTa, v))
 }
 
+// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
+func Version(v int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldEQ(FieldVersion, v))
+}
+
 // MaLoai applies equality check predicate on the "ma_loai" field. It's identical to MaLoaiEQ.
 func MaLoai(v int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldEQ(FieldMaLoai, v))
@@ -352,6 +357,46 @@ func MoTaEqualFold(v string) predicate.VuKhi {
 // MoTaContainsFold applies the ContainsFold predicate on the "mo_ta" field.
 func MoTaContainsFold(v string) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldContainsFold(FieldMoTa, v))
+}
+
+// VersionEQ applies the EQ predicate on the "version" field.
+func VersionEQ(v int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldEQ(FieldVersion, v))
+}
+
+// VersionNEQ applies the NEQ predicate on the "version" field.
+func VersionNEQ(v int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldNEQ(FieldVersion, v))
+}
+
+// VersionIn applies the In predicate on the "version" field.
+func VersionIn(vs ...int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldIn(FieldVersion, vs...))
+}
+
+// VersionNotIn applies the NotIn predicate on the "version" field.
+func VersionNotIn(vs ...int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldNotIn(FieldVersion, vs...))
+}
+
+// VersionGT applies the GT predicate on the "version" field.
+func VersionGT(v int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldGT(FieldVersion, v))
+}
+
+// VersionGTE applies the GTE predicate on the "version" field.
+func VersionGTE(v int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldGTE(FieldVersion, v))
+}
+
+// VersionLT applies the LT predicate on the "version" field.
+func VersionLT(v int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldLT(FieldVersion, v))
+}
+
+// VersionLTE applies the LTE predicate on the "version" field.
+func VersionLTE(v int64) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldLTE(FieldVersion, v))
 }
 
 // MaLoaiEQ applies the EQ predicate on the "ma_loai" field.

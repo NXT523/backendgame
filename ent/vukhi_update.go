@@ -20,8 +20,9 @@ import (
 // VuKhiUpdate is the builder for updating VuKhi entities.
 type VuKhiUpdate struct {
 	config
-	hooks    []Hook
-	mutation *VuKhiMutation
+	hooks     []Hook
+	mutation  *VuKhiMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the VuKhiUpdate builder.
@@ -124,6 +125,27 @@ func (_u *VuKhiUpdate) SetNillableMoTa(v *string) *VuKhiUpdate {
 // ClearMoTa clears the value of the "mo_ta" field.
 func (_u *VuKhiUpdate) ClearMoTa() *VuKhiUpdate {
 	_u.mutation.ClearMoTa()
+	return _u
+}
+
+// SetVersion sets the "version" field.
+func (_u *VuKhiUpdate) SetVersion(v int64) *VuKhiUpdate {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *VuKhiUpdate) SetNillableVersion(v *int64) *VuKhiUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *VuKhiUpdate) AddVersion(v int64) *VuKhiUpdate {
+	_u.mutation.AddVersion(v)
 	return _u
 }
 
@@ -276,6 +298,12 @@ func (_u *VuKhiUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *VuKhiUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *VuKhiUpdate {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *VuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -314,6 +342,12 @@ func (_u *VuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.MoTaCleared() {
 		_spec.ClearField(vukhi.FieldMoTa, field.TypeString)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(vukhi.FieldVersion, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(vukhi.FieldVersion, field.TypeInt64, value)
 	}
 	if _u.mutation.LoaiCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -402,6 +436,7 @@ func (_u *VuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{vukhi.Label}
@@ -417,9 +452,10 @@ func (_u *VuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // VuKhiUpdateOne is the builder for updating a single VuKhi entity.
 type VuKhiUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *VuKhiMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *VuKhiMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetTenVuKhi sets the "ten_vu_khi" field.
@@ -516,6 +552,27 @@ func (_u *VuKhiUpdateOne) SetNillableMoTa(v *string) *VuKhiUpdateOne {
 // ClearMoTa clears the value of the "mo_ta" field.
 func (_u *VuKhiUpdateOne) ClearMoTa() *VuKhiUpdateOne {
 	_u.mutation.ClearMoTa()
+	return _u
+}
+
+// SetVersion sets the "version" field.
+func (_u *VuKhiUpdateOne) SetVersion(v int64) *VuKhiUpdateOne {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *VuKhiUpdateOne) SetNillableVersion(v *int64) *VuKhiUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *VuKhiUpdateOne) AddVersion(v int64) *VuKhiUpdateOne {
+	_u.mutation.AddVersion(v)
 	return _u
 }
 
@@ -681,6 +738,12 @@ func (_u *VuKhiUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *VuKhiUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *VuKhiUpdateOne {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *VuKhiUpdateOne) sqlSave(ctx context.Context) (_node *VuKhi, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -736,6 +799,12 @@ func (_u *VuKhiUpdateOne) sqlSave(ctx context.Context) (_node *VuKhi, err error)
 	}
 	if _u.mutation.MoTaCleared() {
 		_spec.ClearField(vukhi.FieldMoTa, field.TypeString)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(vukhi.FieldVersion, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(vukhi.FieldVersion, field.TypeInt64, value)
 	}
 	if _u.mutation.LoaiCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -824,6 +893,7 @@ func (_u *VuKhiUpdateOne) sqlSave(ctx context.Context) (_node *VuKhi, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(_u.modifiers...)
 	_node = &VuKhi{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

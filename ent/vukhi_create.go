@@ -84,6 +84,20 @@ func (_c *VuKhiCreate) SetNillableMoTa(v *string) *VuKhiCreate {
 	return _c
 }
 
+// SetVersion sets the "version" field.
+func (_c *VuKhiCreate) SetVersion(v int64) *VuKhiCreate {
+	_c.mutation.SetVersion(v)
+	return _c
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_c *VuKhiCreate) SetNillableVersion(v *int64) *VuKhiCreate {
+	if v != nil {
+		_c.SetVersion(*v)
+	}
+	return _c
+}
+
 // SetMaLoai sets the "ma_loai" field.
 func (_c *VuKhiCreate) SetMaLoai(v int) *VuKhiCreate {
 	_c.mutation.SetMaLoai(v)
@@ -188,6 +202,10 @@ func (_c *VuKhiCreate) defaults() {
 		v := vukhi.DefaultTamDanh
 		_c.mutation.SetTamDanh(v)
 	}
+	if _, ok := _c.mutation.Version(); !ok {
+		v := vukhi.DefaultVersion
+		_c.mutation.SetVersion(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -213,6 +231,9 @@ func (_c *VuKhiCreate) check() error {
 		if err := vukhi.MoTaValidator(v); err != nil {
 			return &ValidationError{Name: "mo_ta", err: fmt.Errorf(`ent: validator failed for field "VuKhi.mo_ta": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "VuKhi.version"`)}
 	}
 	if _, ok := _c.mutation.MaLoai(); !ok {
 		return &ValidationError{Name: "ma_loai", err: errors.New(`ent: missing required field "VuKhi.ma_loai"`)}
@@ -283,6 +304,10 @@ func (_c *VuKhiCreate) createSpec() (*VuKhi, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.MoTa(); ok {
 		_spec.SetField(vukhi.FieldMoTa, field.TypeString, value)
 		_node.MoTa = value
+	}
+	if value, ok := _c.mutation.Version(); ok {
+		_spec.SetField(vukhi.FieldVersion, field.TypeInt64, value)
+		_node.Version = value
 	}
 	if nodes := _c.mutation.LoaiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

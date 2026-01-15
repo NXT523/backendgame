@@ -2,6 +2,8 @@ package proxy
 
 import (
 	"context"
+	grpcsrv "game/internal/grpc"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -11,204 +13,149 @@ import (
 	"time"
 )
 
-// Backend đại diện cho một server backend
-type Backend struct {
+
+// BACKEND NODE
+
+
+type BackendNode struct {
 	URL          *url.URL
-	Alive        bool
-	mux          sync.RWMutex
 	ReverseProxy *httputil.ReverseProxy
-	Connections  int64 // số connections hiện tại (cho least connections)
+
+	alive bool
+	mux   sync.RWMutex
+
+	Connections int64
+	MaxConn     int64
 }
 
-// SetAlive cập nhật trạng thái sống của backend
-func (b *Backend) SetAlive(alive bool) {
+func (b *BackendNode) SetAlive(v bool) {
 	b.mux.Lock()
-	b.Alive = alive
+	b.alive = v
 	b.mux.Unlock()
 }
 
-// IsAlive kiểm tra backend có sống không
-func (b *Backend) IsAlive() bool {
+func (b *BackendNode) IsAlive() bool {
 	b.mux.RLock()
-	alive := b.Alive
-	b.mux.RUnlock()
-	return alive
+	defer b.mux.RUnlock()
+	return b.alive
 }
 
-// ServerPool quản lý pool các backend servers
-type ServerPool struct {
-	backends []*Backend
-	current  uint64 // index hiện tại cho round-robin
+func (b *BackendNode) IsOverloaded() bool {
+	return atomic.LoadInt64(&b.Connections) >= b.MaxConn
+}
+
+
+// BACKEND POOL
+
+
+type BackendPool struct {
+	backends []*BackendNode
 	mux      sync.RWMutex
 }
 
-// AddBackend thêm backend vào pool
-func (s *ServerPool) AddBackend(backend *Backend) {
-	s.mux.Lock()
-	s.backends = append(s.backends, backend)
-	s.mux.Unlock()
+func NewBackendPool() *BackendPool {
+	return &BackendPool{}
 }
 
-// GetNextPeerRoundRobin lấy backend tiếp theo theo thuật toán Round Robin
-func (s *ServerPool) GetNextPeerRoundRobin() *Backend {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
+func (p *BackendPool) AddBackend(b *BackendNode) {
+	p.mux.Lock()
+	defer p.mux.Unlock()
+	p.backends = append(p.backends, b)
+}
 
-	if len(s.backends) == 0 {
-		return nil
-	}
+func (p *BackendPool) GetLeastLoadedBackend() *BackendNode {
+	p.mux.RLock()
+	defer p.mux.RUnlock()
 
-	// Round-robin: tăng counter và lấy backend
-	next := atomic.AddUint64(&s.current, 1)
+	var selected *BackendNode
+	minConn := int64(^uint64(0) >> 1)
 
-	// Thử tìm backend sống, tối đa thử len(backends) lần
-	for i := 0; i < len(s.backends); i++ {
-		idx := int(next+uint64(i)) % len(s.backends)
-		if s.backends[idx].IsAlive() {
-			return s.backends[idx]
+	for _, b := range p.backends {
+		if !b.IsAlive() || b.IsOverloaded() {
+			continue
 		}
-	}
-	return nil
-}
-
-// GetNextPeerLeastConnections lấy backend có ít connections nhất
-func (s *ServerPool) GetNextPeerLeastConnections() *Backend {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
-
-	if len(s.backends) == 0 {
-		return nil
-	}
-
-	var selected *Backend
-	minConn := int64(^uint64(0) >> 1) // Max int64
-
-	for _, backend := range s.backends {
-		if backend.IsAlive() {
-			conn := atomic.LoadInt64(&backend.Connections)
-			if conn < minConn {
-				minConn = conn
-				selected = backend
-			}
+		conn := atomic.LoadInt64(&b.Connections)
+		if conn < minConn {
+			minConn = conn
+			selected = b
 		}
 	}
 	return selected
 }
 
-// HealthCheck kiểm tra sức khỏe các backends
-func (s *ServerPool) HealthCheck() {
-	for _, b := range s.backends {
-		alive := isBackendAlive(b.URL)
-		b.SetAlive(alive)
-		status := "UP"
-		if !alive {
-			status = "DOWN"
-		}
-		log.Printf("[HealthCheck] %s - %s", b.URL, status)
-	}
+
+// SMART LOAD BALANCER (LC + Retry)
+
+
+type SmartLoadBalancer struct {
+	pool *BackendPool
 }
 
-// isBackendAlive ping backend để kiểm tra
-func isBackendAlive(u *url.URL) bool {
-	timeout := 2 * time.Second
-	client := &http.Client{Timeout: timeout}
+func NewSmartLoadBalancer(pool *BackendPool) *SmartLoadBalancer {
+	return &SmartLoadBalancer{pool: pool}
+}
 
-	checkURL := u.String() + "/health"
-	req, err := http.NewRequest("GET", checkURL, nil)
-	if err != nil {
-		return false
+func (lb *SmartLoadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	const maxRetry = 2
+
+	var body []byte
+	if r.Body != nil {
+		body, _ = io.ReadAll(r.Body)
+		_ = r.Body.Close()
 	}
 
-	// Đánh dấu đây là health-check nội bộ
-	req.Header.Set("X-Health-Check", "true")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return false
-	}
-	defer resp.Body.Close()
-
-	return resp.StatusCode >= 200 && resp.StatusCode < 300
-}
-
-// LoadBalancer là reverse proxy chính với load balancing
-type LoadBalancer struct {
-	serverPool *ServerPool
-	algorithm  string // "round-robin" hoặc "least-connections"
-}
-
-// NewBackend tạo Backend từ url string và cấu hình reverse proxy
-func NewBackend(urlStr string) (*Backend, error) {
-	u, err := url.Parse(urlStr)
-	if err != nil {
-		return nil, err
-	}
-	proxy := httputil.NewSingleHostReverseProxy(u)
-	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		log.Printf("[ProxyError] %s: %v", u, err)
-		w.WriteHeader(http.StatusBadGateway)
-	}
-	return &Backend{URL: u, Alive: true, ReverseProxy: proxy}, nil
-}
-
-// NewServerPool tạo pool mới
-func NewServerPool() *ServerPool {
-	return &ServerPool{backends: make([]*Backend, 0)}
-}
-
-// NewLoadBalancer tạo LoadBalancer
-func NewLoadBalancer(pool *ServerPool, algorithm string) *LoadBalancer {
-	return &LoadBalancer{serverPool: pool, algorithm: algorithm}
-}
-
-// GetNextPeer lấy backend theo algorithm đã chọn
-func (lb *LoadBalancer) GetNextPeer() *Backend {
-	switch lb.algorithm {
-	case "least-connections":
-		return lb.serverPool.GetNextPeerLeastConnections()
-	default: // round-robin
-		return lb.serverPool.GetNextPeerRoundRobin()
-	}
-}
-
-// ServeHTTP xử lý request và forward tới backend
-func (lb *LoadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	attempts := 0
-	maxAttempts := 3
-
-	for attempts < maxAttempts {
-		peer := lb.GetNextPeer()
-		if peer == nil {
-			http.Error(w, "Service unavailable", http.StatusServiceUnavailable)
+	for attempt := 0; attempt <= maxRetry; attempt++ {
+		backend := lb.pool.GetLeastLoadedBackend()
+		if backend == nil {
+			http.Error(w, "All backends overloaded", http.StatusTooManyRequests)
 			return
 		}
 
-		// Tăng connection count
-		atomic.AddInt64(&peer.Connections, 1)
-		defer atomic.AddInt64(&peer.Connections, -1)
+		start := time.Now()
+		atomic.AddInt64(&backend.Connections, 1)
 
-		// Log request
-		log.Printf("[%s] %s %s -> %s", lb.algorithm, r.Method, r.URL.Path, peer.URL)
+		rw := &responseWriter{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
 
-		// Custom response writer để catch error
-		rw := &responseWriter{ResponseWriter: w}
-		peer.ReverseProxy.ServeHTTP(rw, r)
+		backend.ReverseProxy.ServeHTTP(
+			rw,
+			cloneRequestWithBody(r, body),
+		)
 
-		// Nếu thành công, return
-		if rw.statusCode < 500 || rw.statusCode == 0 {
+		atomic.AddInt64(&backend.Connections, -1)
+
+		status := rw.statusCode
+		elapsed := time.Since(start).Milliseconds()
+
+		grpcsrv.AccessLogger.Printf(
+			"[LC-SMART] %s %s -> %s | status=%d | %dms | conn=%d/%d",
+			r.Method,
+			r.URL.Path,
+			backend.URL,
+			status,
+			elapsed,
+			atomic.LoadInt64(&backend.Connections),
+			backend.MaxConn,
+		)
+
+		if status < 500 {
 			return
 		}
 
-		// Nếu lỗi 5xx, đánh dấu backend down tạm thời và retry
-		log.Printf("[Error] Backend %s returned %d, retrying...", peer.URL, rw.statusCode)
-		peer.SetAlive(false)
-		attempts++
+		log.Printf("[Failover] %s returned %d", backend.URL, status)
+		backend.SetAlive(false)
+		go recoverBackend(backend)
 	}
 
 	http.Error(w, "All backends failed", http.StatusBadGateway)
 }
 
-// responseWriter wrapper để track status code
+
+// RESPONSE WRAPPER
+
+
 type responseWriter struct {
 	http.ResponseWriter
 	statusCode int
@@ -219,24 +166,61 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-// StartHealthCheck chạy health check định kỳ (gọi trong goroutine)
-func StartHealthCheck(pool *ServerPool, interval time.Duration, stopCh <-chan struct{}) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			pool.HealthCheck()
-		case <-stopCh:
-			return
-		}
+// BACKEND FACTORY
+
+
+func NewBackendNode(rawURL string, maxConn int64) (*BackendNode, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
 	}
+
+	proxy := httputil.NewSingleHostReverseProxy(u)
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		log.Printf("[ProxyError] %s: %v", u, err)
+		w.WriteHeader(http.StatusBadGateway)
+	}
+
+	return &BackendNode{
+		URL:          u,
+		ReverseProxy: proxy,
+		alive:        true,
+		MaxConn:      maxConn,
+	}, nil
 }
 
-// GracefulShutdown helper để đóng context nếu cần
+
+// HEALTH CHECK + RECOVERY
+
+
+func recoverBackend(b *BackendNode) {
+	time.Sleep(5 * time.Second)
+
+	if isBackendAlive(b.URL) {
+		b.SetAlive(true)
+		log.Printf("[Recovery] %s back online", b.URL)
+		return
+	}
+
+	log.Printf("[Recovery] %s still DOWN", b.URL)
+}
+
+func isBackendAlive(u *url.URL) bool {
+	client := http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get(u.String() + "/health")
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode >= 200 && resp.StatusCode < 300
+}
+
+
+// GRACEFUL SHUTDOWN
+
+
 func GracefulShutdown(ctx context.Context) error {
-	// placeholder nếu cần logic shutdown đặc thù ở tương lai
 	<-ctx.Done()
 	return ctx.Err()
 }

@@ -134,4 +134,8 @@ func init() {
 	vukhiDescMoTa := vukhiFields[5].Descriptor()
 	// vukhi.MoTaValidator is a validator for the "mo_ta" field. It is called by the builders before save.
 	vukhi.MoTaValidator = vukhiDescMoTa.Validators[0].(func(string) error)
+	// vukhiDescVersion is the schema descriptor for version field.
+	vukhiDescVersion := vukhiFields[6].Descriptor()
+	// vukhi.DefaultVersion holds the default value on creation for the version field.
+	vukhi.DefaultVersion = vukhiDescVersion.Default.(int64)
 }

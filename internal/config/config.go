@@ -20,7 +20,8 @@ type CauHinh struct {
 	HTTPPortRaw  string // ví dụ: :8082
 
 	// Proxy
-	ProxyPort string // ví dụ: ":9000"
+	ProxyPortRoundRobin       string // ví dụ: ":9010"
+	ProxyPortLeastConnections string // ví dụ: ":9000"
 
 	// --- REDIS ---
 	RedisAddr          string        // ví dụ: localhost:6379
@@ -50,7 +51,8 @@ type CauHinh struct {
 	// --- KAFKA ---
 	KafkaBrokers         string // ví dụ: "localhost:9093,localhost:9094"
 	KafkaAllowAutoCreate bool   // cho phép auto-create topic nếu cluster cho phép
-	KafkaTopic           string // ví dụ: vu_khi_created
+	KafkaTopicCreate     string // ví dụ: vu_khi_created
+	KafkaTopicUpdate     string // ví dụ: vu_khi_updated
 	KafkaPartitions      int    // ví dụ: 3
 	KafkaReplication     int    // ví dụ: 2
 }
@@ -68,7 +70,8 @@ func DocCauHinh() CauHinh {
 		HTTPPortRaw:  env("HTTP_PORT_RAW", ":8082"),
 
 		// Proxy
-		ProxyPort: env("PROXY_PORT", ":9000"),
+		ProxyPortRoundRobin:       env("PROXY_PORT_ROUND_ROBIN", ":9010"),
+		ProxyPortLeastConnections: env("PROXY_PORT_LEAST_CONNECTIONS", ":9000"),
 
 		// --- REDIS (ENV override được hết) ---
 		RedisAddr:          env("REDIS_ADDR", "localhost:6379"), //"redis-16269.crce214.us-east-1-3.ec2.redns.redis-cloud.com:16269"
@@ -96,8 +99,8 @@ func DocCauHinh() CauHinh {
 		// --- KAFKA ---
 		KafkaBrokers:         env("KAFKA_BROKERS", "localhost:9093"),
 		KafkaAllowAutoCreate: envBool("KAFKA_ALLOW_AUTO_CREATE", false),
-		KafkaTopic:           env("KAFKA_TOPIC", "vu_khi_created"),
-		KafkaPartitions:      envInt("KAFKA_PARTITIONS", 3),
+		KafkaTopicCreate:     env("KAFKA_TOPIC_CREATE", "vu_khi_created"),
+		KafkaTopicUpdate:     env("KAFKA_TOPIC_UPDATE", "vu_khi_updated"),
 		KafkaReplication:     envInt("KAFKA_REPLICATION", 1),
 	}
 }

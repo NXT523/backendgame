@@ -293,6 +293,45 @@ func local_request_VuKhiService_Search_0(ctx context.Context, marshaler runtime.
 	return msg, metadata, err
 }
 
+func request_VuKhiService_LayVersion_0(ctx context.Context, marshaler runtime.Marshaler, client VuKhiServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq LayVersionRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["ten_vu_khi"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ten_vu_khi")
+	}
+	protoReq.TenVuKhi, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ten_vu_khi", err)
+	}
+	msg, err := client.LayVersion(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_VuKhiService_LayVersion_0(ctx context.Context, marshaler runtime.Marshaler, server VuKhiServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq LayVersionRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["ten_vu_khi"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ten_vu_khi")
+	}
+	protoReq.TenVuKhi, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ten_vu_khi", err)
+	}
+	msg, err := server.LayVersion(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterVuKhiServiceHandlerServer registers the http handlers for service VuKhiService to "mux".
 // UnaryRPC     :call VuKhiServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -478,6 +517,26 @@ func RegisterVuKhiServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_VuKhiService_Search_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_VuKhiService_LayVersion_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/v1.VuKhiService/LayVersion", runtime.WithHTTPPathPattern("/vukhi/ent/version/{ten_vu_khi}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_VuKhiService_LayVersion_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_VuKhiService_LayVersion_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -672,6 +731,23 @@ func RegisterVuKhiServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		}
 		forward_VuKhiService_Search_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_VuKhiService_LayVersion_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/v1.VuKhiService/LayVersion", runtime.WithHTTPPathPattern("/vukhi/ent/version/{ten_vu_khi}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_VuKhiService_LayVersion_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_VuKhiService_LayVersion_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
@@ -685,6 +761,7 @@ var (
 	pattern_VuKhiService_GetAllTocDoDanh_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"vukhi", "ent", "tocdo"}, ""))
 	pattern_VuKhiService_GetAllTamDanh_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"vukhi", "ent", "tamdanh"}, ""))
 	pattern_VuKhiService_Search_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"vukhi", "ent", "search"}, ""))
+	pattern_VuKhiService_LayVersion_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"vukhi", "ent", "version", "ten_vu_khi"}, ""))
 )
 
 var (
@@ -697,4 +774,5 @@ var (
 	forward_VuKhiService_GetAllTocDoDanh_0      = runtime.ForwardResponseMessage
 	forward_VuKhiService_GetAllTamDanh_0        = runtime.ForwardResponseMessage
 	forward_VuKhiService_Search_0               = runtime.ForwardResponseMessage
+	forward_VuKhiService_LayVersion_0           = runtime.ForwardResponseMessage
 )

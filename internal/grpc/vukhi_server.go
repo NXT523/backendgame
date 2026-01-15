@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,37 +16,46 @@ import (
 	"game/ent/he"
 	"game/ent/loaivukhi"
 	"game/ent/vukhi"
-	"game/internal/events"
 	"game/pkg/mapping"
 	redisx "game/pkg/redis"
 	v1 "game/v1"
 
 	entsql "entgo.io/ent/dialect/sql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// VuKhiGRPCServer cần có s.rdb *redis.Client
+const (
+	kVuKhiSearchPrefix = "vukhi:search"
+	kVuKhiVersionKey   = "vukhi:search:version"
+	kLockRetryCount    = 20
+	kLockSleepTime     = 100 * time.Millisecond
+	kLockDefaultTTL    = 5 * time.Second
+)
+
+// VuKhiGRPCServer struct
 type VuKhiGRPCServer struct {
 	v1.UnimplementedVuKhiServiceServer
-	ent *ent.Client
-	rdb *redis.Client
-
-	ttl         time.Duration // TTL cache cho trang search
-	kafkaWriter *kafka.Writer
+	ent                *ent.Client
+	rdb                *redis.Client
+	ttl                time.Duration
+	kafkaWriterCreated *kafka.Writer
+	kafkaWriterUpdated *kafka.Writer
 }
 
-// Mặc định TTL = 10 phút
+// NewVuKhiGRPCServer Mặc định TTL = 10 phút
 func NewVuKhiGRPCServer(entClient *ent.Client, rdb *redis.Client) *VuKhiGRPCServer {
 	return &VuKhiGRPCServer{ent: entClient, rdb: rdb, ttl: 10 * time.Minute}
 }
 
-// Khởi tạo kèm TTL tuỳ biến
+// NewVuKhiGRPCServerWithTTL Khởi tạo kèm TTL tuỳ biến
 func NewVuKhiGRPCServerWithTTL(entClient *ent.Client, rdb *redis.Client, ttl time.Duration) *VuKhiGRPCServer {
 	if ttl <= 0 {
 		ttl = 10 * time.Minute
@@ -53,16 +63,95 @@ func NewVuKhiGRPCServerWithTTL(entClient *ent.Client, rdb *redis.Client, ttl tim
 	return &VuKhiGRPCServer{ent: entClient, rdb: rdb, ttl: ttl}
 }
 
-func NewVuKhiGRPCServerKafka(entClient *ent.Client, rdb *redis.Client, kw *kafka.Writer) *VuKhiGRPCServer {
+func NewVuKhiGRPCServerKafka(entClient *ent.Client, rdb *redis.Client, kwCreated, kwUpdated *kafka.Writer) *VuKhiGRPCServer {
 	return &VuKhiGRPCServer{
-		ent:         entClient,
-		rdb:         rdb,
-		ttl:         10 * time.Minute,
-		kafkaWriter: kw,
+		ent:                entClient,
+		rdb:                rdb,
+		ttl:                10 * time.Minute,
+		kafkaWriterCreated: kwCreated,
+		kafkaWriterUpdated: kwUpdated,
 	}
 }
 
+func (s *VuKhiGRPCServer) invalidateCacheOptimized(ctx context.Context, maVuKhi int32) {
+	pipe := s.rdb.Pipeline()
+
+	// 1. Tăng version Global (Cho TẤT CẢ các trang danh sách/tìm kiếm)
+	// Vì ta không phân loại, nên cứ có thay đổi là reset cache danh sách.
+	pipe.Incr(ctx, kVuKhiVersionKey)
+	pipe.Expire(ctx, kVuKhiVersionKey, 7*24*time.Hour)
+
+	// 2. Tăng version của ID cụ thể (Cho trang chi tiết hoặc search chính xác ID)
+	if maVuKhi > 0 {
+		keyID := fmt.Sprintf("%s:id:%d", kVuKhiVersionKey, maVuKhi)
+		pipe.Incr(ctx, keyID)
+		pipe.Expire(ctx, keyID, 24*time.Hour)
+	}
+
+	_, _ = pipe.Exec(ctx)
+}
+
+// Đây là "Cánh cửa" đầu tiên mà nhiều server phải đi qua.
+func (s *VuKhiGRPCServer) acquireLockWithRetry(ctx context.Context, key string, ttl time.Duration) (bool, error) {
+	for i := 0; i < kLockRetryCount; i++ {
+		// Thử lấy lock
+		ok, err := s.rdb.SetNX(ctx, key, "1", ttl).Result()
+		if err != nil {
+			return false, err // Lỗi kết nối Redis (mạng, sập server...)
+		}
+		if ok {
+			
+			return true, nil // Lấy lock thành công
+		}
+
+		// Nếu chưa lấy được (Lock đang bị người khác giữ), chờ 1 chút
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err() // Client cancel
+		case <-time.After(kLockSleepTime):
+			continue // Thử lại sau khi ngủ
+		}
+	}
+	return false, nil // Hết lượt thử
+}
+
+// [CACHE KEY GEN] Tạo key tìm kiếm dựa trên Version hiện tại từ Redis
+func (s *VuKhiGRPCServer) khoaTimKiem(ctx context.Context, req *v1.TimKiemRequest, limit, offset int) string {
+	var versionKey string
+
+	// LOGIC ĐƠN GIẢN:
+	// Nếu search chính xác ID -> Lấy version của ID đó
+	// Còn lại (search tên, loại,...) -> Lấy version Global
+	if req.MaVuKhi != nil && req.MaVuKhi.Value > 0 {
+		versionKey = fmt.Sprintf("%s:id:%d", kVuKhiVersionKey, req.MaVuKhi.Value)
+	} else {
+		versionKey = kVuKhiVersionKey
+	}
+
+	// Lấy giá trị version từ Redis
+	ver, err := s.rdb.Get(ctx, versionKey).Int()
+	if err != nil {
+		ver = 1 // Mặc định nếu chưa có
+	}
+
+	cp := proto.Clone(req).(*v1.TimKiemRequest)
+	cp.Limit = int32(limit)
+	cp.Cursor = encodeCursor(offset)
+
+	b, _ := (protojson.MarshalOptions{
+		UseProtoNames:   true,
+		EmitUnpopulated: true,
+	}).Marshal(cp)
+
+	sum := sha1.Sum(b)
+	return fmt.Sprintf("%s:v%d:%s", kVuKhiSearchPrefix, ver, hex.EncodeToString(sum[:]))
+}
+
+// --- MAPPING HELPERS ---
 func toPB(item *ent.VuKhi) *v1.VuKhi {
+	if item == nil {
+		return nil
+	}
 	out := &v1.VuKhi{
 		MaVuKhi:        int32(item.ID),
 		TenVuKhi:       item.TenVuKhi,
@@ -73,6 +162,7 @@ func toPB(item *ent.VuKhi) *v1.VuKhi {
 		MaLoai:         int32(item.MaLoai),
 		MaDoHiem:       int32(item.MaDoHiem),
 		MaHe:           int32(item.MaHe),
+		Version:        int64(item.Version),
 	}
 	if item.Edges.Loai != nil {
 		out.TenLoai = item.Edges.Loai.TenLoai
@@ -99,33 +189,224 @@ func listToPB(rows []*ent.VuKhi) *v1.DanhSachVuKhi {
 	return resp
 }
 
-const (
-	kVuKhiSearchPrefix = "vukhi:search:v2"
-)
 
-// vukhi:search:v1:<sha1(json_request)>
-func (s *VuKhiGRPCServer) khoaTimKiem(req *v1.TimKiemRequest, limit, offset int) string {
-	cp := proto.Clone(req).(*v1.TimKiemRequest)
-	cp.Limit = int32(limit)
-	cp.Cursor = encodeCursor(offset)
-
-	b, _ := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: true,
-	}).Marshal(cp)
-
-	sum := sha1.Sum(b)
-	return kVuKhiSearchPrefix + ":" + hex.EncodeToString(sum[:])
-}
-
-//  CRUD
-
-func (s *VuKhiGRPCServer) CreateVuKhi(ctx context.Context, req *v1.TaoVuKhiRequest) (*v1.VuKhi, error) {
-	if strings.TrimSpace(req.TenVuKhi) == "" {
+func (s *VuKhiGRPCServer) CreateVuKhi(
+	ctx context.Context,
+	req *v1.TaoVuKhiRequest,
+) (*v1.VuKhi, error) {
+	name := strings.TrimSpace(req.TenVuKhi)
+	if name == "" {
 		return nil, status.Error(codes.InvalidArgument, "ten_vu_khi là bắt buộc")
 	}
+	normalized := normalizeTen(name)
 
-	v, err := s.ent.VuKhi.Create().
+	// 1. Idempotency Check (Chống lặp request)
+	// Hệ thống sẽ trả về kết quả cũ chứ không tạo ra 2 vũ khí giống hệt nhau (Dù gửi 10 lần thì chỉ 1 bản ghi được tạo ra)
+	var idemResult *v1.VuKhi
+	if req.IdempotencyKey != "" {
+		idKey := "idemp:vukhi:create:" + req.IdempotencyKey
+		cached, err := s.rdb.Get(ctx, idKey).Bytes()
+		if err == nil && string(cached) != "processing" {
+			var out v1.VuKhi
+			if json.Unmarshal(cached, &out) == nil && out.MaVuKhi > 0 {
+				return &out, nil
+			}
+		}
+		ok, err := s.rdb.SetNX(ctx, idKey, "processing", time.Hour).Result()
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Idempotency redis lỗi")
+		}
+		if !ok {
+			return nil, status.Error(codes.Aborted, "Request đang được xử lý")
+		}
+		defer func() {
+			if idemResult != nil {
+				b, _ := json.Marshal(idemResult)
+				_ = s.rdb.Set(ctx, idKey, b, time.Hour).Err()
+			} else {
+				s.rdb.Del(ctx, idKey)
+			}
+		}()
+	}
+
+	// 2. Redis Distributed Lock (Khóa phân tán - Quan trọng nhất)
+	// Các request từ nhiều server bị ép phải xếp hàng, biến xử lý song song thành xử lý tuần tự (Serial execution) đối với 1 vũ khí cụ thể.
+	lockKey := "lock:vukhi:create:" + normalized
+	ok, err := s.acquireLockWithRetry(ctx, lockKey, kLockDefaultTTL)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Redis lock lỗi: %v", err)
+	}
+	if !ok {
+		return nil, status.Error(codes.ResourceExhausted, "Hệ thống bận")
+	}
+	defer s.rdb.Del(ctx, lockKey)
+
+	// tự động gia hạn TTL
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	go func() {
+		ticker := time.NewTicker(kLockDefaultTTL / 2)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				_ = s.rdb.Expire(ctx, lockKey, kLockDefaultTTL).Err()
+			case <-stopCh:
+				return
+			}
+		}
+	}()
+
+	// 3. Database Transaction
+	//Nếu insert lỗi thì rollback toàn bộ.
+	tx, err := s.ent.Tx(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Tx err: %v", err)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			_ = tx.Rollback()
+			panic(r)
+		} else {
+			_ = tx.Rollback()
+		}
+	}()
+
+	v, err := tx.VuKhi.Create().
+		SetTenVuKhi(name).
+		SetSatThuongCoBan(int(req.SatThuongCoBan)).
+		SetTocDoDanh(req.TocDoDanh).
+		SetTamDanh(int(req.TamDanh)).
+		SetMoTa(req.MoTa).
+		SetMaLoai(int(req.MaLoai)).
+		SetMaDoHiem(int(req.MaDoHiem)).
+		SetMaHe(int(req.MaHe)).
+		SetVersion(1).
+		Save(ctx)
+
+	if err != nil {
+		var mysqlErr *mysql.MySQLError
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return nil, status.Error(codes.AlreadyExists, "Tên vũ khí đã tồn tại")
+		}
+		return nil, status.Errorf(codes.Internal, "Tạo lỗi: %v", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, status.Errorf(codes.Internal, "Commit lỗi: %v", err)
+	}
+
+	// Query lại full info
+	v, err = s.ent.VuKhi.Query().
+		Where(vukhi.IDEQ(v.ID)).
+		WithLoai().WithDoHiem().WithHe().
+		Only(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Query after create err: %v", err)
+	}
+
+	result := toPB(v)
+	idemResult = result
+
+	// 4. Cache Invalidation (Làm mới Cache)
+	//Tăng version cache lên để các lệnh Search sau này biết dữ liệu đã thay đổi
+	s.invalidateCacheOptimized(ctx, int32(v.ID))
+
+	return result, nil
+}
+
+func (s *VuKhiGRPCServer) UpdateByNameVuKhi(ctx context.Context, req *v1.CapNhatTheoTenVuKhiRequest) (*v1.VuKhi, error) {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return nil, status.Error(codes.InvalidArgument, "name")
+	}
+	if req.Version <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "version required")
+	}
+	normalized := normalizeTen(name)
+
+	// Idempotency Check (Chống lặp request)
+	idemKey := getIdempotencyKey(ctx)
+	if idemKey != "" {
+		idemProcessingKey := "idemp:vukhi:update:processing:" + normalized + ":" + idemKey
+		ok, err := s.rdb.SetNX(ctx, idemProcessingKey, "1", 2*time.Minute).Result()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Redis err")
+		}
+		if !ok {
+			return nil, status.Error(codes.Aborted, "Processing")
+		}
+		defer s.rdb.Del(ctx, idemProcessingKey)
+	}
+
+	// Redis Distributed Lock (Khóa phân tán - Quan trọng nhất)
+	// Các request từ nhiều server bị ép phải xếp hàng, biến xử lý song song thành xử lý tuần tự (Serial execution) đối với 1 vũ khí cụ thể.
+	lockKey := "lock:vukhi:update:" + normalized
+	ok, err := s.acquireLockWithRetry(ctx, lockKey, kLockDefaultTTL)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Lock err")
+	}
+	if !ok {
+		return nil, status.Error(codes.ResourceExhausted, "System busy")
+	}
+	defer s.rdb.Del(ctx, lockKey)
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	go func() {
+		ticker := time.NewTicker(kLockDefaultTTL / 2)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				_ = s.rdb.Expire(ctx, lockKey, kLockDefaultTTL).Err()
+			case <-stopCh:
+				return
+			}
+		}
+	}()
+
+	// 2. Database Transaction
+	//Nếu insert lỗi thì rollback toàn bộ.
+	tx, err := s.ent.Tx(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Tx err")
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			_ = tx.Rollback()
+			panic(r)
+		} else {
+			_ = tx.Rollback()
+		}
+	}()
+
+	// 3. Database Transaction & Row Locking (FOR UPDATE)
+	// Database sẽ khóa cứng dòng này lại, không cho transaction khác sửa đổi cho đến khi transaction này commit.
+	cur, err := tx.VuKhi.Query().
+		Where(vukhi.TenVuKhiEQ(name)).
+		Modify(func(s *entsql.Selector) {
+			s.ForUpdate()
+		}).
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, status.Error(codes.NotFound, "Not Found")
+		}
+		return nil, status.Errorf(codes.Internal, "Query err: %v", err)
+	}
+
+	// 4. Optimistic Locking (Khóa lạc quan - Chống ghi đè dữ liệu cũ)
+	// Không bị lỗi "Lost Update" (Sửa đổi của người đến sau đè mất sửa đổi của người đến trước
+	if int32(cur.Version) != req.Version {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"Data changed (DB: %d, Client: %d). Refresh page.", cur.Version, req.Version)
+	}
+
+	// 5. Update & Increment Version
+	// Luôn tăng version lên +1 mỗi khi update thành công
+	res, err := tx.VuKhi.UpdateOneID(cur.ID).
 		SetTenVuKhi(req.TenVuKhi).
 		SetSatThuongCoBan(int(req.SatThuongCoBan)).
 		SetTocDoDanh(req.TocDoDanh).
@@ -134,104 +415,142 @@ func (s *VuKhiGRPCServer) CreateVuKhi(ctx context.Context, req *v1.TaoVuKhiReque
 		SetMaLoai(int(req.MaLoai)).
 		SetMaDoHiem(int(req.MaDoHiem)).
 		SetMaHe(int(req.MaHe)).
+		SetVersion(cur.Version + 1).
 		Save(ctx)
+
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Tạo vũ khí lỗi: %v", err)
+		if ent.IsConstraintError(err) {
+			return nil, status.Error(codes.AlreadyExists, "Name exists")
+		}
+		return nil, status.Errorf(codes.Internal, "Update err: %v", err)
 	}
 
-	// eager-load để có tên loại/hệ/độ hiếm
-	v, _ = s.ent.VuKhi.Query().
-		Where(vukhi.IDEQ(v.ID)).
+	if err := tx.Commit(); err != nil {
+		return nil, status.Errorf(codes.Internal, "Commit err: %v", err)
+	}
+
+	after, err := s.ent.VuKhi.Query().
+		Where(vukhi.IDEQ(res.ID)).
 		WithLoai().WithDoHiem().WithHe().
 		Only(ctx)
 
-	// -------------- GỬI KAFKA -------------- //
-	if s.kafkaWriter != nil {
-		ev := events.SuKienVuKhiCreated{
-			Type:           "VU_KHI_CREATED",
-			ID:             v.ID,
-			TenVuKhi:       v.TenVuKhi,
-			SatThuongCoBan: v.SatThuongCoBan,
-			TocDoDanh:      v.TocDoDanh,
-			TamDanh:        v.TamDanh,
-			MoTa:           v.MoTa,
-			MaLoai:         v.MaLoai,
-			MaHe:           v.MaHe,
-			MaDoHiem:       v.MaDoHiem,
-			CreatedAt:      time.Now().Unix(),
-			CreatedBy:      "system", // sau này lấy từ ctx
-		}
-		data, _ := json.Marshal(ev)
-		go func(d []byte, id int) {
-			ctx2, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			errKafka := s.kafkaWriter.WriteMessages(ctx2, kafka.Message{
-				Key:   []byte(fmt.Sprintf("%d", ev.ID)),
-				Value: d,
-			})
-			if errKafka != nil {
-				// đẩy vào outbox để worker retry sau
-				if err := s.rdb.RPush(context.Background(), "outbox:vukhi", d).Err(); err != nil {
-					fmt.Println("Push outbox thất bại:", err)
-				} else {
-					fmt.Println("Đã push message vào outbox để retry sau")
-				}
+	var resp *v1.VuKhi
+	if err != nil {
+		resp = toPB(res)
+	} else {
+		resp = toPB(after)
+	}
+
+	if idemKey != "" {
+		b, _ := protojson.Marshal(resp)
+		cacheKey := "idemp:vukhi:update:" + normalized + ":" + idemKey
+		_ = s.rdb.Set(ctx, cacheKey, b, 2*time.Minute).Err()
+	}
+
+	// 6. Xả Cache (Invalidate)
+	// Báo hiệu cho hệ thống Search biết dữ liệu ID này đã cũ, cần xóa cache đi.
+	s.invalidateCacheOptimized(ctx, int32(cur.ID))
+
+	return resp, nil
+}
+
+func (s *VuKhiGRPCServer) DeleteByNameVuKhi(
+	ctx context.Context,
+	req *v1.XoaTheoTenVuKhiRequest,
+) (*v1.XoaTheoTenVuKhiResponse, error) {
+
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return nil, status.Error(codes.InvalidArgument, "name required")
+	}
+
+	// 1. Redis Lock: Chặn các thao tác song song vào tên vũ khí này từ Redis
+	normalized := strings.ToLower(strings.TrimSpace(name))
+	normalized = strings.Join(strings.Fields(normalized), " ")
+	lockKey := "lock:vukhi:delete:" + normalized
+	ok, err := s.acquireLockWithRetry(ctx, lockKey, kLockDefaultTTL)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Redis err")
+	}
+	if !ok {
+		return nil, status.Error(codes.ResourceExhausted, "System busy")
+	}
+
+	stopCh := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(kLockDefaultTTL / 2)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				_ = s.rdb.Expire(ctx, lockKey, kLockDefaultTTL).Err()
+			case <-stopCh:
+				return
 			}
-		}(data, v.ID)
-	}
+		}
+	}()
+	defer func() {
+		close(stopCh)
+		s.rdb.Del(ctx, lockKey)
+	}()
 
-	return toPB(v), nil
-}
-
-func (s *VuKhiGRPCServer) UpdateByNameVuKhi(ctx context.Context, req *v1.CapNhatTheoTenVuKhiRequest) (*v1.VuKhi, error) {
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return nil, status.Error(codes.InvalidArgument, "name không hợp lệ")
+	// 2. Database Transaction
+	//Nếu insert lỗi thì rollback toàn bộ.
+	tx, err := s.ent.Tx(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Tx err")
 	}
-	cur, err := s.ent.VuKhi.Query().Where(vukhi.TenVuKhiEQ(name)).Only(ctx)
+	defer func() {
+		if r := recover(); r != nil {
+			_ = tx.Rollback()
+			panic(r)
+		} else {
+			_ = tx.Rollback()
+		}
+	}()
+
+	// 3. Query
+	name = normalizeTen(name)
+	cur, err := tx.VuKhi.
+		Query().
+		Where(vukhi.TenVuKhiEQ(name)).
+		Modify(func(s *entsql.Selector) {
+			s.ForUpdate()
+		}).
+		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, status.Error(codes.NotFound, "Không tìm thấy vũ khí")
+			return nil, status.Error(codes.NotFound, "Not Found")
 		}
-		return nil, status.Errorf(codes.Internal, "Lỗi truy vấn: %v", err)
+		return nil, status.Errorf(codes.Internal, "Query err: %v", err)
 	}
-	up := s.ent.VuKhi.UpdateOneID(cur.ID).
-		SetTenVuKhi(req.TenVuKhi).
-		SetSatThuongCoBan(int(req.SatThuongCoBan)).
-		SetTocDoDanh(req.TocDoDanh).
-		SetTamDanh(int(req.TamDanh)).
-		SetMoTa(req.MoTa).
-		SetMaLoai(int(req.MaLoai)).
-		SetMaDoHiem(int(req.MaDoHiem)).
-		SetMaHe(int(req.MaHe))
-	after, err := up.Save(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cập nhật lỗi: %v", err)
+
+	// 4. Delete
+	if err := tx.VuKhi.DeleteOneID(cur.ID).Exec(ctx); err != nil {
+		return nil, status.Errorf(codes.Internal, "Delete err: %v", err)
 	}
-	after, _ = s.ent.VuKhi.Query().Where(vukhi.IDEQ(after.ID)).WithLoai().WithDoHiem().WithHe().Only(ctx)
-	return toPB(after), nil
+
+	// 5. Commit
+	if err := tx.Commit(); err != nil {
+		return nil, status.Errorf(codes.Internal, "Commit err: %v", err)
+	}
+
+	// 6. Cache Invalidation (Xả Cache)
+	s.invalidateCacheOptimized(ctx, int32(cur.ID))
+
+	return &v1.XoaTheoTenVuKhiResponse{
+		DeletedName: name,
+		MaVuKhi:     int32(cur.ID),
+	}, nil
 }
 
-func (s *VuKhiGRPCServer) DeleteByNameVuKhi(ctx context.Context, req *v1.XoaTheoTenVuKhiRequest) (*v1.XoaTheoTenVuKhiResponse, error) {
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return nil, status.Error(codes.InvalidArgument, "name không hợp lệ")
-	}
-	cur, err := s.ent.VuKhi.Query().Where(vukhi.TenVuKhiEQ(name)).Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, status.Error(codes.NotFound, "Không tìm thấy vũ khí")
-		}
-		return nil, status.Errorf(codes.Internal, "Lỗi truy vấn: %v", err)
-	}
-	if err := s.ent.VuKhi.DeleteOneID(cur.ID).Exec(ctx); err != nil {
-		return nil, status.Errorf(codes.Internal, "Xóa lỗi: %v", err)
-	}
-	return &v1.XoaTheoTenVuKhiResponse{DeletedName: name}, nil
+func normalizeTen(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.Join(strings.Fields(s), " ")
+	return s
 }
 
-//  GET LIST
-
+//  GET LIST
 func (s *VuKhiGRPCServer) GetAllVuKhi(ctx context.Context, req *v1.LayTatCaRequest) (*v1.DanhSachVuKhi, error) {
 	qb := s.ent.VuKhi.Query().WithLoai().WithDoHiem().WithHe()
 	if strings.TrimSpace(req.Q) != "" {
@@ -290,7 +609,7 @@ func (s *VuKhiGRPCServer) GetAllTamDanh(ctx context.Context, _ *emptypb.Empty) (
 	return &v1.DanhSachIntVuKhi{Total: int32(len(out)), Items: out}, nil
 }
 
-//  SEARCH (cursor-based + cache JSON)
+//  SEARCH (cursor-based + cache JSON)
 
 func (s *VuKhiGRPCServer) Search(ctx context.Context, req *v1.TimKiemRequest) (*v1.DanhSachVuKhi, error) {
 	// 1) Chuẩn hoá limit/cursor
@@ -300,8 +619,9 @@ func (s *VuKhiGRPCServer) Search(ctx context.Context, req *v1.TimKiemRequest) (*
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	// 2) Cache key (giống DoHiem: dùng hàm khoaTimKiem + prefix)
-	cacheKey := s.khoaTimKiem(req, limit, offset)
+	// 2) Tạo Cache Key thông minh (Cache Strategy)
+	// Key cache được tạo từ: Hash(Request Params) + Redis Version Key.
+	cacheKey := s.khoaTimKiem(ctx, req, limit, offset)
 
 	// 3) Đọc cache (Redis JSON)
 	if page, ok := redisx.LayTrangCacheJSON(ctx, s.rdb, cacheKey, func() *v1.DanhSachVuKhi {
@@ -775,4 +1095,39 @@ func validOrderField(f string) bool {
 		return true
 	}
 	return false
+}
+
+func getIdempotencyKey(ctx context.Context) string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ""
+	}
+	if v := md.Get("idempotency-key"); len(v) > 0 {
+		return v[0]
+	}
+	return ""
+}
+
+func (s *VuKhiGRPCServer) LayVersion(
+	ctx context.Context,
+	req *v1.LayVersionRequest,
+) (*v1.LayVersionResponse, error) {
+	name := strings.TrimSpace(req.TenVuKhi)
+	if name == "" {
+		return nil, status.Error(codes.InvalidArgument, "ten_vu_khi không hợp lệ")
+	}
+
+	vk, err := s.ent.VuKhi.Query().
+		Where(vukhi.TenVuKhiEQ(name)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, status.Error(codes.NotFound, "Không tìm thấy vũ khí")
+		}
+		return nil, status.Errorf(codes.Internal, "Lỗi DB: %v", err)
+	}
+
+	return &v1.LayVersionResponse{
+		Version: int32(vk.Version),
+	}, nil
 }

@@ -30,7 +30,6 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/redis/go-redis/v9"
-	kafkago "github.com/segmentio/kafka-go"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -59,7 +58,7 @@ func taoServerENTChungCong(
 	entClient *ent.Client,
 	rdb *redis.Client,
 	mc *memcache.Client,
-	kw *kafkago.Writer, // có thể nil
+	kw *kconsumer.KafkaWriters, // có thể nil
 	elog *logx.LoggerElastic, // nhận logger từ main
 ) *http.Server {
 	rl := middleware.TaoRateLimiter(3, time.Minute)
@@ -77,7 +76,7 @@ func taoServerENTChungCong(
 
 	var vukhiImpl *grpcsrv.VuKhiGRPCServer
 	if kw != nil {
-		vukhiImpl = grpcsrv.NewVuKhiGRPCServerKafka(entClient, rdb, kw)
+		vukhiImpl = grpcsrv.NewVuKhiGRPCServerKafka(entClient, rdb, kw.Created, kw.Updated)
 	} else {
 		vukhiImpl = grpcsrv.NewVuKhiGRPCServer(entClient, rdb)
 	}
@@ -171,15 +170,20 @@ func taoServerENTChungCong(
 		mux.ServeHTTP(w, r)
 	}), &http2.Server{})
 
-	rateLimiter := middleware.TaoRateLimiter(100, time.Minute) // 100 req/phút từ mỗi IP
+	// rateLimiter := middleware.TaoRateLimiter(100, time.Minute) // 100 req/phút từ mỗi IP
 
 	// Trả server với Handler; Addr sẽ được gán từ main
 	return &http.Server{
-		Handler: rateLimiter.RateLimitHTTP(h2cHandler),
+		// Handler: rateLimiter.RateLimitHTTP(h2cHandler),
+		Handler: h2cHandler,
 	}
 }
 
 func main() {
+
+	if err := grpcsrv.SetupAccessLogger(); err != nil {
+		log.Fatalf("Setup access logger lỗi: %v", err)
+	}
 	cfg := config.DocCauHinh()
 	ctx := context.Background()
 
@@ -216,32 +220,35 @@ func main() {
 	}
 
 	// ===== KAFKA WRITER =====
-	kafkaWriter, err := kconsumer.TaoKafkaWriter(ctx, cfg, cfg.KafkaTopic, cfg.KafkaPartitions, cfg.KafkaReplication)
+	kafkaWriter, err := kconsumer.TaoKafkaWriters(ctx, cfg)
 	if err != nil {
-		log.Fatalf("Khởi tạo Kafka writer lỗi: %v", err)
+		log.Fatalf("Khởi tạo Kafka writers lỗi: %v", err)
 	}
-	defer kafkaWriter.Close()
+	defer kafkaWriter.Created.Close()
+	defer kafkaWriter.Updated.Close()
 
 	// ===== KAFKA CONSUMERS =====
-	go kconsumer.ChayConsumerXoaCacheVuKhi(ctx, rdb, elog)
-	go kconsumer.ChayConsumerXoaCacheVuKhi(ctx, rdb, elog)
-	go kconsumer.ChayConsumerXoaCacheVuKhi(ctx, rdb, elog)
 	go kconsumer.ChayConsumerAuditVuKhi(ctx, elog)
 	go kconsumer.ChayConsumerAuditVuKhi(ctx, elog)
 	go kconsumer.ChayConsumerAuditVuKhi(ctx, elog)
-	go kconsumer.ChayConsumerDongBoVuKhi(ctx, rdb, elog)
-	go kconsumer.ChayConsumerDongBoVuKhi(ctx, rdb, elog)
-	go kconsumer.ChayConsumerDongBoVuKhi(ctx, rdb, elog)
 
 	// ===== OUTBOX WORKERS =====
-	workerCount := 3 // thay đổi tuỳ số partition trong topic
+	workerCount := 3 // số worker cho EventVuKhiCreated (match partitions)
 	workerCtx, workerCancel := context.WithCancel(ctx)
+	defer workerCancel()
 	var workerWg sync.WaitGroup
 	for i := 0; i < workerCount; i++ {
 		workerWg.Add(1)
 		go func() {
 			defer workerWg.Done()
-			kconsumer.SenderWorker(workerCtx, rdb, kafkaWriter, elog)
+			kconsumer.SenderWorker(
+				workerCtx,
+				rdb,
+				kconsumer.EventVuKhiCreated,
+				"outbox:vukhicreate",
+				kafkaWriter.Created,
+				elog,
+			)
 		}()
 	}
 
@@ -289,41 +296,74 @@ func main() {
 	}
 	rawSrv := &http.Server{Addr: cfg.HTTPPortRaw, Handler: router.CreateRouterRaw(rawDB)}
 
-	// ===== REVERSE PROXY (load balancer) =====
-	pool := proxy.NewServerPool()
+	// ===== REVERSE PROXY - ROUND ROBIN =====
+	rrRegistry := proxy.NewUpstreamRegistry()
+
+	backendURLsRoundRobin := []string{
+		"http://localhost" + cfg.HTTPPortEnt1,
+		"http://localhost" + cfg.HTTPPortEnt2,
+		"http://localhost" + cfg.HTTPPortEnt3,
+	}
+
+	for _, u := range backendURLsRoundRobin {
+		up, err := proxy.NewUpstream(u, 100)
+		if err != nil {
+			log.Fatalf("Không parse upstream %s: %v", u, err)
+		}
+		rrRegistry.Register(up)
+		log.Printf("[RR] Added upstream: %s", u)
+	}
+
+	rrLB := proxy.NewRoundRobin(rrRegistry)
+	// rateLimiter := middleware.TaoRateLimiter(100, time.Minute)
+
+	// proxyHandler :=
+	// 	middleware.InjectionGuard(
+	// 		rateLimiter.RateLimitHTTP(lb),
+	// 	)
+	proxySrvRoundRobin := &http.Server{
+		Addr:    cfg.ProxyPortRoundRobin,
+		Handler: rrLB,
+	}
+
+	// ===== REVERSE PROXY - LEAST CONNECTIONS =====
+	lcPool := proxy.NewBackendPool()
+
 	backendURLs := []string{
 		"http://localhost" + cfg.HTTPPortEnt1,
 		"http://localhost" + cfg.HTTPPortEnt2,
 		"http://localhost" + cfg.HTTPPortEnt3,
 	}
+
 	for _, u := range backendURLs {
-		b, err := proxy.NewBackend(u)
+		backend, err := proxy.NewBackendNode(u, 100) // max 100 concurrent
 		if err != nil {
-			log.Fatalf("Không parse backend url %s: %v", u, err)
+			log.Fatalf("Không parse backend %s: %v", u, err)
 		}
-		pool.AddBackend(b)
-		log.Printf("Đã thêm backend cho proxy: %s", u)
+		lcPool.AddBackend(backend)
+		log.Printf("[LC] Added backend: %s", u)
 	}
 
-	lb := proxy.NewLoadBalancer(pool, "round-robin") // hoặc "least-connections"
+	lcLB := proxy.NewSmartLoadBalancer(lcPool)
 
-	rateLimiter := middleware.TaoRateLimiter(100, time.Minute)
-
-	proxyHandler :=
-		middleware.InjectionGuard(
-			rateLimiter.RateLimitHTTP(lb),
-		)
-
-	proxySrv := &http.Server{
-		Addr:    cfg.ProxyPort,
-		Handler: proxyHandler,
+	proxySrvLeastConnections := &http.Server{
+		Addr:    cfg.ProxyPortLeastConnections,
+		Handler: lcLB,
 	}
-
-	// bắt đầu goroutine kiểm tra sức khỏe
-	healthStop := make(chan struct{})
-	go proxy.StartHealthCheck(pool, 60*time.Second, healthStop)
-
 	// Start servers song song (ENT, GORM, RAW, Proxy)
+	go func() {
+		log.Printf("🚀 Least-Connections Proxy chạy tại http://localhost%s", cfg.ProxyPortLeastConnections)
+		if err := proxySrvLeastConnections.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("[LC PROXY] lỗi: %v", err)
+		}
+	}()
+	go func() {
+		log.Printf("🚀 Round Robin Proxy chạy tại http://localhost%s", cfg.ProxyPortRoundRobin)
+		if err := proxySrvRoundRobin.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("[PROXY] lỗi: %v", err)
+		}
+	}()
+
 	go func() {
 		log.Println("🚀 ENT1  chạy tại http://localhost" + cfg.HTTPPortEnt1)
 		if err := entSrv1.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -352,12 +392,6 @@ func main() {
 		log.Println("🚀 RAW  chạy tại http://localhost" + cfg.HTTPPortRaw)
 		if err := rawSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("[RAW] ListenAndServe lỗi: %v", err)
-		}
-	}()
-	go func() {
-		log.Printf("🚀 Reverse Proxy (load balancer) chạy tại http://localhost:9000")
-		if err := proxySrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("[PROXY] ListenAndServe lỗi: %v", err)
 		}
 	}()
 
@@ -396,15 +430,15 @@ func main() {
 	shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	
+
 	_ = entSrv1.Shutdown(shutCtx)
 	_ = entSrv2.Shutdown(shutCtx)
 	_ = entSrv3.Shutdown(shutCtx)
 	_ = gormSrv.Shutdown(shutCtx)
 	_ = rawSrv.Shutdown(shutCtx)
-	_ = proxySrv.Shutdown(shutCtx)
-
-	// stop healthcheck
-	close(healthStop)
+	_ = proxySrvLeastConnections.Shutdown(shutCtx)
+	_ = proxySrvRoundRobin.Shutdown(shutCtx)
 
 	// 4) Close DBs, flush logs
 	entClient.Close()

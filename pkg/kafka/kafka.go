@@ -72,16 +72,39 @@ func TaoTopic(ctx context.Context, brokers []string, topic string, partitions, r
 }
 
 // ====== WRITER ======
-func TaoKafkaWriter(ctx context.Context, cfg config.CauHinh, topic string, partitions, replication int) (*kafka.Writer, error) {
+type KafkaWriters struct {
+	Created *kafka.Writer
+	Updated *kafka.Writer
+}
+
+// TaoKafkaWriters sẽ tạo sẵn 2 writer cho 2 topic cố định
+func TaoKafkaWriters(ctx context.Context, cfg config.CauHinh) (*KafkaWriters, error) {
+	createdWriter, err := taoWriter(ctx, cfg, cfg.KafkaTopicCreate, 3, cfg.KafkaReplication)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedWriter, err := taoWriter(ctx, cfg, cfg.KafkaTopicUpdate, 1, cfg.KafkaReplication)
+	if err != nil {
+		createdWriter.Close()
+		return nil, err
+	}
+
+	return &KafkaWriters{
+		Created: createdWriter,
+		Updated: updatedWriter,
+	}, nil
+}
+
+// Hàm nội bộ dùng để tạo 1 writer cho topic cụ thể
+func taoWriter(ctx context.Context, cfg config.CauHinh, topic string, partitions, replication int) (*kafka.Writer, error) {
 	brokers := tachBrokers(cfg.KafkaBrokers)
 
-	// Tạo topic nếu chưa có (bây giờ nhận flag created)
 	created, err := TaoTopic(ctx, brokers, topic, partitions, replication)
 	if err != nil {
 		return nil, err
 	}
 	if created {
-		// In thêm log rõ ràng cho main thấy
 		log.Printf("[kafka] Topic '%s' được tạo (partitions=%d, replication=%d)\n", topic, partitions, replication)
 	} else {
 		log.Printf("[kafka] Topic '%s' đã tồn tại\n", topic)
@@ -92,7 +115,7 @@ func TaoKafkaWriter(ctx context.Context, cfg config.CauHinh, topic string, parti
 		Topic:                  topic,
 		Balancer:               &kafka.Hash{},
 		RequiredAcks:           kafka.RequireAll,
-		AllowAutoTopicCreation: false, // đã tự tạo topic
+		AllowAutoTopicCreation: false,
 		WriteTimeout:           10 * time.Second,
 		ReadTimeout:            10 * time.Second,
 	}

@@ -38,3 +38,16 @@ func RunMigrationEnt(ctx context.Context, client *ent.Client) error {
 		schema.WithDropColumn(false),
 	)
 }
+
+func DropDBEnt(dsnChuaDB, tenDB string) error {
+	db, err := sql.Open("mysql", dsnChuaDB)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Exec(fmt.Sprintf(
+		"DROP DATABASE IF EXISTS %s", tenDB,
+	))
+	return err
+}

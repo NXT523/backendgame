@@ -1900,6 +1900,8 @@ type VuKhiMutation struct {
 	tam_danh             *int
 	addtam_danh          *int
 	mo_ta                *string
+	version              *int64
+	addversion           *int64
 	clearedFields        map[string]struct{}
 	loai                 *int
 	clearedloai          bool
@@ -2269,6 +2271,62 @@ func (m *VuKhiMutation) ResetMoTa() {
 	delete(m.clearedFields, vukhi.FieldMoTa)
 }
 
+// SetVersion sets the "version" field.
+func (m *VuKhiMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *VuKhiMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the VuKhi entity.
+// If the VuKhi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VuKhiMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *VuKhiMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *VuKhiMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *VuKhiMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
 // SetMaLoai sets the "ma_loai" field.
 func (m *VuKhiMutation) SetMaLoai(i int) {
 	m.loai = &i
@@ -2531,7 +2589,7 @@ func (m *VuKhiMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VuKhiMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.ten_vu_khi != nil {
 		fields = append(fields, vukhi.FieldTenVuKhi)
 	}
@@ -2546,6 +2604,9 @@ func (m *VuKhiMutation) Fields() []string {
 	}
 	if m.mo_ta != nil {
 		fields = append(fields, vukhi.FieldMoTa)
+	}
+	if m.version != nil {
+		fields = append(fields, vukhi.FieldVersion)
 	}
 	if m.loai != nil {
 		fields = append(fields, vukhi.FieldMaLoai)
@@ -2574,6 +2635,8 @@ func (m *VuKhiMutation) Field(name string) (ent.Value, bool) {
 		return m.TamDanh()
 	case vukhi.FieldMoTa:
 		return m.MoTa()
+	case vukhi.FieldVersion:
+		return m.Version()
 	case vukhi.FieldMaLoai:
 		return m.MaLoai()
 	case vukhi.FieldMaDoHiem:
@@ -2599,6 +2662,8 @@ func (m *VuKhiMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTamDanh(ctx)
 	case vukhi.FieldMoTa:
 		return m.OldMoTa(ctx)
+	case vukhi.FieldVersion:
+		return m.OldVersion(ctx)
 	case vukhi.FieldMaLoai:
 		return m.OldMaLoai(ctx)
 	case vukhi.FieldMaDoHiem:
@@ -2649,6 +2714,13 @@ func (m *VuKhiMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetMoTa(v)
 		return nil
+	case vukhi.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
 	case vukhi.FieldMaLoai:
 		v, ok := value.(int)
 		if !ok {
@@ -2687,6 +2759,9 @@ func (m *VuKhiMutation) AddedFields() []string {
 	if m.addtam_danh != nil {
 		fields = append(fields, vukhi.FieldTamDanh)
 	}
+	if m.addversion != nil {
+		fields = append(fields, vukhi.FieldVersion)
+	}
 	return fields
 }
 
@@ -2701,6 +2776,8 @@ func (m *VuKhiMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedTocDoDanh()
 	case vukhi.FieldTamDanh:
 		return m.AddedTamDanh()
+	case vukhi.FieldVersion:
+		return m.AddedVersion()
 	}
 	return nil, false
 }
@@ -2730,6 +2807,13 @@ func (m *VuKhiMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddTamDanh(v)
+		return nil
+	case vukhi.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
 		return nil
 	}
 	return fmt.Errorf("unknown VuKhi numeric field %s", name)
@@ -2781,6 +2865,9 @@ func (m *VuKhiMutation) ResetField(name string) error {
 		return nil
 	case vukhi.FieldMoTa:
 		m.ResetMoTa()
+		return nil
+	case vukhi.FieldVersion:
+		m.ResetVersion()
 		return nil
 	case vukhi.FieldMaLoai:
 		m.ResetMaLoai()

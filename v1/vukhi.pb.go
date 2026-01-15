@@ -44,6 +44,7 @@ type VuKhi struct {
 	SoLuong        int32   `protobuf:"varint,25,opt,name=so_luong,json=soLuong,proto3" json:"so_luong,omitempty"`
 	MauSac         string  `protobuf:"bytes,26,opt,name=mau_sac,json=mauSac,proto3" json:"mau_sac,omitempty"`
 	CapBac         int32   `protobuf:"varint,27,opt,name=cap_bac,json=capBac,proto3" json:"cap_bac,omitempty"`
+	Version        int64   `protobuf:"varint,99,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -197,6 +198,13 @@ func (x *VuKhi) GetCapBac() int32 {
 	return 0
 }
 
+func (x *VuKhi) GetVersion() int64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
 type TaoVuKhiRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	TenVuKhi       string                 `protobuf:"bytes,1,opt,name=ten_vu_khi,json=tenVuKhi,proto3" json:"ten_vu_khi,omitempty"`
@@ -207,6 +215,7 @@ type TaoVuKhiRequest struct {
 	MaLoai         int32                  `protobuf:"varint,6,opt,name=ma_loai,json=maLoai,proto3" json:"ma_loai,omitempty"`
 	MaDoHiem       int32                  `protobuf:"varint,7,opt,name=ma_do_hiem,json=maDoHiem,proto3" json:"ma_do_hiem,omitempty"`
 	MaHe           int32                  `protobuf:"varint,8,opt,name=ma_he,json=maHe,proto3" json:"ma_he,omitempty"`
+	IdempotencyKey string                 `protobuf:"bytes,100,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -297,6 +306,13 @@ func (x *TaoVuKhiRequest) GetMaHe() int32 {
 	return 0
 }
 
+func (x *TaoVuKhiRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
 type CapNhatTheoTenVuKhiRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Name           string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -308,6 +324,7 @@ type CapNhatTheoTenVuKhiRequest struct {
 	MaLoai         int32                  `protobuf:"varint,7,opt,name=ma_loai,json=maLoai,proto3" json:"ma_loai,omitempty"`
 	MaDoHiem       int32                  `protobuf:"varint,8,opt,name=ma_do_hiem,json=maDoHiem,proto3" json:"ma_do_hiem,omitempty"`
 	MaHe           int32                  `protobuf:"varint,9,opt,name=ma_he,json=maHe,proto3" json:"ma_he,omitempty"`
+	Version        int32                  `protobuf:"varint,99,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -405,6 +422,13 @@ func (x *CapNhatTheoTenVuKhiRequest) GetMaHe() int32 {
 	return 0
 }
 
+func (x *CapNhatTheoTenVuKhiRequest) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
 type XoaTheoTenVuKhiRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -452,6 +476,7 @@ func (x *XoaTheoTenVuKhiRequest) GetName() string {
 type XoaTheoTenVuKhiResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DeletedName   string                 `protobuf:"bytes,1,opt,name=deleted_name,json=deletedName,proto3" json:"deleted_name,omitempty"`
+	MaVuKhi       int32                  `protobuf:"varint,2,opt,name=ma_vu_khi,json=maVuKhi,proto3" json:"ma_vu_khi,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -491,6 +516,13 @@ func (x *XoaTheoTenVuKhiResponse) GetDeletedName() string {
 		return x.DeletedName
 	}
 	return ""
+}
+
+func (x *XoaTheoTenVuKhiResponse) GetMaVuKhi() int32 {
+	if x != nil {
+		return x.MaVuKhi
+	}
+	return 0
 }
 
 type LayTatCaRequest struct {
@@ -769,6 +801,94 @@ func (x *DanhSachDoubleVuKhi) GetItems() []float64 {
 	return nil
 }
 
+type LayVersionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TenVuKhi      string                 `protobuf:"bytes,1,opt,name=ten_vu_khi,json=tenVuKhi,proto3" json:"ten_vu_khi,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LayVersionRequest) Reset() {
+	*x = LayVersionRequest{}
+	mi := &file_v1_vukhi_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LayVersionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LayVersionRequest) ProtoMessage() {}
+
+func (x *LayVersionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_vukhi_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LayVersionRequest.ProtoReflect.Descriptor instead.
+func (*LayVersionRequest) Descriptor() ([]byte, []int) {
+	return file_v1_vukhi_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *LayVersionRequest) GetTenVuKhi() string {
+	if x != nil {
+		return x.TenVuKhi
+	}
+	return ""
+}
+
+type LayVersionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Version       int32                  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LayVersionResponse) Reset() {
+	*x = LayVersionResponse{}
+	mi := &file_v1_vukhi_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LayVersionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LayVersionResponse) ProtoMessage() {}
+
+func (x *LayVersionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_vukhi_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LayVersionResponse.ProtoReflect.Descriptor instead.
+func (*LayVersionResponse) Descriptor() ([]byte, []int) {
+	return file_v1_vukhi_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *LayVersionResponse) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
 type TimKiemRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// ---- Vũ khí / khóa ngoại (EQ) ----
@@ -827,7 +947,7 @@ type TimKiemRequest struct {
 
 func (x *TimKiemRequest) Reset() {
 	*x = TimKiemRequest{}
-	mi := &file_v1_vukhi_proto_msgTypes[10]
+	mi := &file_v1_vukhi_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -839,7 +959,7 @@ func (x *TimKiemRequest) String() string {
 func (*TimKiemRequest) ProtoMessage() {}
 
 func (x *TimKiemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_vukhi_proto_msgTypes[10]
+	mi := &file_v1_vukhi_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -852,7 +972,7 @@ func (x *TimKiemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimKiemRequest.ProtoReflect.Descriptor instead.
 func (*TimKiemRequest) Descriptor() ([]byte, []int) {
-	return file_v1_vukhi_proto_rawDescGZIP(), []int{10}
+	return file_v1_vukhi_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *TimKiemRequest) GetMaVuKhi() *wrapperspb.Int32Value {
@@ -1118,7 +1238,7 @@ var File_v1_vukhi_proto protoreflect.FileDescriptor
 
 const file_v1_vukhi_proto_rawDesc = "" +
 	"\n" +
-	"\x0ev1/vukhi.proto\x12\x02v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xfc\x03\n" +
+	"\x0ev1/vukhi.proto\x12\x02v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x96\x04\n" +
 	"\x05VuKhi\x12\x1a\n" +
 	"\tma_vu_khi\x18\x01 \x01(\x05R\amaVuKhi\x12\x1c\n" +
 	"\n" +
@@ -1138,7 +1258,8 @@ const file_v1_vukhi_proto_rawDesc = "" +
 	"\x11toc_do_danh_bonus\x18\x18 \x01(\x01R\x0etocDoDanhBonus\x12\x19\n" +
 	"\bso_luong\x18\x19 \x01(\x05R\asoLuong\x12\x17\n" +
 	"\amau_sac\x18\x1a \x01(\tR\x06mauSac\x12\x17\n" +
-	"\acap_bac\x18\x1b \x01(\x05R\x06capBac\"\xf6\x01\n" +
+	"\acap_bac\x18\x1b \x01(\x05R\x06capBac\x12\x18\n" +
+	"\aversion\x18c \x01(\x03R\aversion\"\x9f\x02\n" +
 	"\x0fTaoVuKhiRequest\x12\x1c\n" +
 	"\n" +
 	"ten_vu_khi\x18\x01 \x01(\tR\btenVuKhi\x12)\n" +
@@ -1149,7 +1270,8 @@ const file_v1_vukhi_proto_rawDesc = "" +
 	"\ama_loai\x18\x06 \x01(\x05R\x06maLoai\x12\x1c\n" +
 	"\n" +
 	"ma_do_hiem\x18\a \x01(\x05R\bmaDoHiem\x12\x13\n" +
-	"\x05ma_he\x18\b \x01(\x05R\x04maHe\"\x95\x02\n" +
+	"\x05ma_he\x18\b \x01(\x05R\x04maHe\x12'\n" +
+	"\x0fidempotency_key\x18d \x01(\tR\x0eidempotencyKey\"\xaf\x02\n" +
 	"\x1aCapNhatTheoTenVuKhiRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\n" +
@@ -1161,11 +1283,13 @@ const file_v1_vukhi_proto_rawDesc = "" +
 	"\ama_loai\x18\a \x01(\x05R\x06maLoai\x12\x1c\n" +
 	"\n" +
 	"ma_do_hiem\x18\b \x01(\x05R\bmaDoHiem\x12\x13\n" +
-	"\x05ma_he\x18\t \x01(\x05R\x04maHe\",\n" +
+	"\x05ma_he\x18\t \x01(\x05R\x04maHe\x12\x18\n" +
+	"\aversion\x18c \x01(\x05R\aversion\",\n" +
 	"\x16XoaTheoTenVuKhiRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"<\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"X\n" +
 	"\x17XoaTheoTenVuKhiResponse\x12!\n" +
-	"\fdeleted_name\x18\x01 \x01(\tR\vdeletedName\"\x1f\n" +
+	"\fdeleted_name\x18\x01 \x01(\tR\vdeletedName\x12\x1a\n" +
+	"\tma_vu_khi\x18\x02 \x01(\x05R\amaVuKhi\"\x1f\n" +
 	"\x0fLayTatCaRequest\x12\f\n" +
 	"\x01q\x18\x01 \x01(\tR\x01q\"\xa1\x01\n" +
 	"\rDanhSachVuKhi\x12\x14\n" +
@@ -1184,7 +1308,12 @@ const file_v1_vukhi_proto_rawDesc = "" +
 	"\x05items\x18\x02 \x03(\tR\x05items\"A\n" +
 	"\x13DanhSachDoubleVuKhi\x12\x14\n" +
 	"\x05total\x18\x01 \x01(\x05R\x05total\x12\x14\n" +
-	"\x05items\x18\x02 \x03(\x01R\x05items\"\xde\x0f\n" +
+	"\x05items\x18\x02 \x03(\x01R\x05items\"1\n" +
+	"\x11LayVersionRequest\x12\x1c\n" +
+	"\n" +
+	"ten_vu_khi\x18\x01 \x01(\tR\btenVuKhi\".\n" +
+	"\x12LayVersionResponse\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\x05R\aversion\"\xde\x0f\n" +
 	"\x0eTimKiemRequest\x127\n" +
 	"\tma_vu_khi\x18\x01 \x01(\v2\x1b.google.protobuf.Int32ValueR\amaVuKhi\x124\n" +
 	"\ama_loai\x18\x02 \x01(\v2\x1b.google.protobuf.Int32ValueR\x06maLoai\x120\n" +
@@ -1230,7 +1359,7 @@ const file_v1_vukhi_proto_rawDesc = "" +
 	"\vmax_cap_bac\x18= \x01(\v2\x1b.google.protobuf.Int32ValueR\tmaxCapBac\x12\x1f\n" +
 	"\varrange_asc\x18F \x01(\tR\n" +
 	"arrangeAsc\x12!\n" +
-	"\farrange_desc\x18G \x01(\tR\varrangeDescJ\x04\b\x17\x10\x182\xd9\x06\n" +
+	"\farrange_desc\x18G \x01(\tR\varrangeDescJ\x04\b\x17\x10\x182\xbf\a\n" +
 	"\fVuKhiService\x12I\n" +
 	"\vCreateVuKhi\x12\x13.v1.TaoVuKhiRequest\x1a\t.v1.VuKhi\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/vukhi/ent/post\x12h\n" +
 	"\x11UpdateByNameVuKhi\x12\x1e.v1.CapNhatTheoTenVuKhiRequest\x1a\t.v1.VuKhi\"(\x82\xd3\xe4\x93\x02\":\x01*\x1a\x1d/vukhi/ent/put-by-name/{name}\x12v\n" +
@@ -1240,7 +1369,9 @@ const file_v1_vukhi_proto_rawDesc = "" +
 	"\x14GetAllSatThuongCoBan\x12\x16.google.protobuf.Empty\x1a\x14.v1.DanhSachIntVuKhi\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/vukhi/ent/satthuongcoban\x12\\\n" +
 	"\x0fGetAllTocDoDanh\x12\x16.google.protobuf.Empty\x1a\x17.v1.DanhSachDoubleVuKhi\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/vukhi/ent/tocdo\x12Y\n" +
 	"\rGetAllTamDanh\x12\x16.google.protobuf.Empty\x1a\x14.v1.DanhSachIntVuKhi\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/vukhi/ent/tamdanh\x12M\n" +
-	"\x06Search\x12\x12.v1.TimKiemRequest\x1a\x11.v1.DanhSachVuKhi\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/vukhi/ent/searchB\fZ\n" +
+	"\x06Search\x12\x12.v1.TimKiemRequest\x1a\x11.v1.DanhSachVuKhi\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/vukhi/ent/search\x12d\n" +
+	"\n" +
+	"LayVersion\x12\x15.v1.LayVersionRequest\x1a\x16.v1.LayVersionResponse\"'\x82\xd3\xe4\x93\x02!\x12\x1f/vukhi/ent/version/{ten_vu_khi}B\fZ\n" +
 	"game/v1;v1b\x06proto3"
 
 var (
@@ -1255,7 +1386,7 @@ func file_v1_vukhi_proto_rawDescGZIP() []byte {
 	return file_v1_vukhi_proto_rawDescData
 }
 
-var file_v1_vukhi_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_v1_vukhi_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_v1_vukhi_proto_goTypes = []any{
 	(*VuKhi)(nil),                      // 0: v1.VuKhi
 	(*TaoVuKhiRequest)(nil),            // 1: v1.TaoVuKhiRequest
@@ -1267,57 +1398,61 @@ var file_v1_vukhi_proto_goTypes = []any{
 	(*DanhSachIntVuKhi)(nil),           // 7: v1.DanhSachIntVuKhi
 	(*DanhSachStringVuKhi)(nil),        // 8: v1.DanhSachStringVuKhi
 	(*DanhSachDoubleVuKhi)(nil),        // 9: v1.DanhSachDoubleVuKhi
-	(*TimKiemRequest)(nil),             // 10: v1.TimKiemRequest
-	(*wrapperspb.Int32Value)(nil),      // 11: google.protobuf.Int32Value
-	(*wrapperspb.DoubleValue)(nil),     // 12: google.protobuf.DoubleValue
-	(*emptypb.Empty)(nil),              // 13: google.protobuf.Empty
+	(*LayVersionRequest)(nil),          // 10: v1.LayVersionRequest
+	(*LayVersionResponse)(nil),         // 11: v1.LayVersionResponse
+	(*TimKiemRequest)(nil),             // 12: v1.TimKiemRequest
+	(*wrapperspb.Int32Value)(nil),      // 13: google.protobuf.Int32Value
+	(*wrapperspb.DoubleValue)(nil),     // 14: google.protobuf.DoubleValue
+	(*emptypb.Empty)(nil),              // 15: google.protobuf.Empty
 }
 var file_v1_vukhi_proto_depIdxs = []int32{
 	0,  // 0: v1.DanhSachVuKhi.items:type_name -> v1.VuKhi
-	11, // 1: v1.TimKiemRequest.ma_vu_khi:type_name -> google.protobuf.Int32Value
-	11, // 2: v1.TimKiemRequest.ma_loai:type_name -> google.protobuf.Int32Value
-	11, // 3: v1.TimKiemRequest.ma_he:type_name -> google.protobuf.Int32Value
-	11, // 4: v1.TimKiemRequest.ma_do_hiem:type_name -> google.protobuf.Int32Value
-	11, // 5: v1.TimKiemRequest.sat_thuong_co_ban:type_name -> google.protobuf.Int32Value
-	12, // 6: v1.TimKiemRequest.toc_do_danh:type_name -> google.protobuf.DoubleValue
-	11, // 7: v1.TimKiemRequest.tam_danh:type_name -> google.protobuf.Int32Value
-	12, // 8: v1.TimKiemRequest.sat_thuong_bonus:type_name -> google.protobuf.DoubleValue
-	12, // 9: v1.TimKiemRequest.toc_do_danh_bonus:type_name -> google.protobuf.DoubleValue
-	11, // 10: v1.TimKiemRequest.so_luong:type_name -> google.protobuf.Int32Value
-	11, // 11: v1.TimKiemRequest.min_sat_thuong_co_ban:type_name -> google.protobuf.Int32Value
-	11, // 12: v1.TimKiemRequest.max_sat_thuong_co_ban:type_name -> google.protobuf.Int32Value
-	12, // 13: v1.TimKiemRequest.min_toc_do_danh:type_name -> google.protobuf.DoubleValue
-	12, // 14: v1.TimKiemRequest.max_toc_do_danh:type_name -> google.protobuf.DoubleValue
-	11, // 15: v1.TimKiemRequest.min_tam_danh:type_name -> google.protobuf.Int32Value
-	11, // 16: v1.TimKiemRequest.max_tam_danh:type_name -> google.protobuf.Int32Value
-	11, // 17: v1.TimKiemRequest.min_so_luong:type_name -> google.protobuf.Int32Value
-	11, // 18: v1.TimKiemRequest.max_so_luong:type_name -> google.protobuf.Int32Value
-	12, // 19: v1.TimKiemRequest.min_sat_thuong_bonus:type_name -> google.protobuf.DoubleValue
-	12, // 20: v1.TimKiemRequest.max_sat_thuong_bonus:type_name -> google.protobuf.DoubleValue
-	12, // 21: v1.TimKiemRequest.min_toc_do_danh_bonus:type_name -> google.protobuf.DoubleValue
-	12, // 22: v1.TimKiemRequest.max_toc_do_danh_bonus:type_name -> google.protobuf.DoubleValue
-	11, // 23: v1.TimKiemRequest.min_cap_bac:type_name -> google.protobuf.Int32Value
-	11, // 24: v1.TimKiemRequest.max_cap_bac:type_name -> google.protobuf.Int32Value
+	13, // 1: v1.TimKiemRequest.ma_vu_khi:type_name -> google.protobuf.Int32Value
+	13, // 2: v1.TimKiemRequest.ma_loai:type_name -> google.protobuf.Int32Value
+	13, // 3: v1.TimKiemRequest.ma_he:type_name -> google.protobuf.Int32Value
+	13, // 4: v1.TimKiemRequest.ma_do_hiem:type_name -> google.protobuf.Int32Value
+	13, // 5: v1.TimKiemRequest.sat_thuong_co_ban:type_name -> google.protobuf.Int32Value
+	14, // 6: v1.TimKiemRequest.toc_do_danh:type_name -> google.protobuf.DoubleValue
+	13, // 7: v1.TimKiemRequest.tam_danh:type_name -> google.protobuf.Int32Value
+	14, // 8: v1.TimKiemRequest.sat_thuong_bonus:type_name -> google.protobuf.DoubleValue
+	14, // 9: v1.TimKiemRequest.toc_do_danh_bonus:type_name -> google.protobuf.DoubleValue
+	13, // 10: v1.TimKiemRequest.so_luong:type_name -> google.protobuf.Int32Value
+	13, // 11: v1.TimKiemRequest.min_sat_thuong_co_ban:type_name -> google.protobuf.Int32Value
+	13, // 12: v1.TimKiemRequest.max_sat_thuong_co_ban:type_name -> google.protobuf.Int32Value
+	14, // 13: v1.TimKiemRequest.min_toc_do_danh:type_name -> google.protobuf.DoubleValue
+	14, // 14: v1.TimKiemRequest.max_toc_do_danh:type_name -> google.protobuf.DoubleValue
+	13, // 15: v1.TimKiemRequest.min_tam_danh:type_name -> google.protobuf.Int32Value
+	13, // 16: v1.TimKiemRequest.max_tam_danh:type_name -> google.protobuf.Int32Value
+	13, // 17: v1.TimKiemRequest.min_so_luong:type_name -> google.protobuf.Int32Value
+	13, // 18: v1.TimKiemRequest.max_so_luong:type_name -> google.protobuf.Int32Value
+	14, // 19: v1.TimKiemRequest.min_sat_thuong_bonus:type_name -> google.protobuf.DoubleValue
+	14, // 20: v1.TimKiemRequest.max_sat_thuong_bonus:type_name -> google.protobuf.DoubleValue
+	14, // 21: v1.TimKiemRequest.min_toc_do_danh_bonus:type_name -> google.protobuf.DoubleValue
+	14, // 22: v1.TimKiemRequest.max_toc_do_danh_bonus:type_name -> google.protobuf.DoubleValue
+	13, // 23: v1.TimKiemRequest.min_cap_bac:type_name -> google.protobuf.Int32Value
+	13, // 24: v1.TimKiemRequest.max_cap_bac:type_name -> google.protobuf.Int32Value
 	1,  // 25: v1.VuKhiService.CreateVuKhi:input_type -> v1.TaoVuKhiRequest
 	2,  // 26: v1.VuKhiService.UpdateByNameVuKhi:input_type -> v1.CapNhatTheoTenVuKhiRequest
 	3,  // 27: v1.VuKhiService.DeleteByNameVuKhi:input_type -> v1.XoaTheoTenVuKhiRequest
 	5,  // 28: v1.VuKhiService.GetAllVuKhi:input_type -> v1.LayTatCaRequest
-	13, // 29: v1.VuKhiService.GetAllTenVuKhi:input_type -> google.protobuf.Empty
-	13, // 30: v1.VuKhiService.GetAllSatThuongCoBan:input_type -> google.protobuf.Empty
-	13, // 31: v1.VuKhiService.GetAllTocDoDanh:input_type -> google.protobuf.Empty
-	13, // 32: v1.VuKhiService.GetAllTamDanh:input_type -> google.protobuf.Empty
-	10, // 33: v1.VuKhiService.Search:input_type -> v1.TimKiemRequest
-	0,  // 34: v1.VuKhiService.CreateVuKhi:output_type -> v1.VuKhi
-	0,  // 35: v1.VuKhiService.UpdateByNameVuKhi:output_type -> v1.VuKhi
-	4,  // 36: v1.VuKhiService.DeleteByNameVuKhi:output_type -> v1.XoaTheoTenVuKhiResponse
-	6,  // 37: v1.VuKhiService.GetAllVuKhi:output_type -> v1.DanhSachVuKhi
-	8,  // 38: v1.VuKhiService.GetAllTenVuKhi:output_type -> v1.DanhSachStringVuKhi
-	7,  // 39: v1.VuKhiService.GetAllSatThuongCoBan:output_type -> v1.DanhSachIntVuKhi
-	9,  // 40: v1.VuKhiService.GetAllTocDoDanh:output_type -> v1.DanhSachDoubleVuKhi
-	7,  // 41: v1.VuKhiService.GetAllTamDanh:output_type -> v1.DanhSachIntVuKhi
-	6,  // 42: v1.VuKhiService.Search:output_type -> v1.DanhSachVuKhi
-	34, // [34:43] is the sub-list for method output_type
-	25, // [25:34] is the sub-list for method input_type
+	15, // 29: v1.VuKhiService.GetAllTenVuKhi:input_type -> google.protobuf.Empty
+	15, // 30: v1.VuKhiService.GetAllSatThuongCoBan:input_type -> google.protobuf.Empty
+	15, // 31: v1.VuKhiService.GetAllTocDoDanh:input_type -> google.protobuf.Empty
+	15, // 32: v1.VuKhiService.GetAllTamDanh:input_type -> google.protobuf.Empty
+	12, // 33: v1.VuKhiService.Search:input_type -> v1.TimKiemRequest
+	10, // 34: v1.VuKhiService.LayVersion:input_type -> v1.LayVersionRequest
+	0,  // 35: v1.VuKhiService.CreateVuKhi:output_type -> v1.VuKhi
+	0,  // 36: v1.VuKhiService.UpdateByNameVuKhi:output_type -> v1.VuKhi
+	4,  // 37: v1.VuKhiService.DeleteByNameVuKhi:output_type -> v1.XoaTheoTenVuKhiResponse
+	6,  // 38: v1.VuKhiService.GetAllVuKhi:output_type -> v1.DanhSachVuKhi
+	8,  // 39: v1.VuKhiService.GetAllTenVuKhi:output_type -> v1.DanhSachStringVuKhi
+	7,  // 40: v1.VuKhiService.GetAllSatThuongCoBan:output_type -> v1.DanhSachIntVuKhi
+	9,  // 41: v1.VuKhiService.GetAllTocDoDanh:output_type -> v1.DanhSachDoubleVuKhi
+	7,  // 42: v1.VuKhiService.GetAllTamDanh:output_type -> v1.DanhSachIntVuKhi
+	6,  // 43: v1.VuKhiService.Search:output_type -> v1.DanhSachVuKhi
+	11, // 44: v1.VuKhiService.LayVersion:output_type -> v1.LayVersionResponse
+	35, // [35:45] is the sub-list for method output_type
+	25, // [25:35] is the sub-list for method input_type
 	25, // [25:25] is the sub-list for extension type_name
 	25, // [25:25] is the sub-list for extension extendee
 	0,  // [0:25] is the sub-list for field type_name
@@ -1334,7 +1469,7 @@ func file_v1_vukhi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_vukhi_proto_rawDesc), len(file_v1_vukhi_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

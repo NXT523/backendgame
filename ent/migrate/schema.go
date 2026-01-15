@@ -97,6 +97,7 @@ var (
 		{Name: "toc_do_danh", Type: field.TypeFloat64, Default: 1},
 		{Name: "tam_danh", Type: field.TypeInt, Default: 1},
 		{Name: "mo_ta", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
 		{Name: "ma_do_hiem", Type: field.TypeInt},
 		{Name: "ma_he", Type: field.TypeInt},
 		{Name: "ma_loai", Type: field.TypeInt},
@@ -109,19 +110,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vu_khis_do_hiems_vu_khi",
-				Columns:    []*schema.Column{VuKhisColumns[6]},
+				Columns:    []*schema.Column{VuKhisColumns[7]},
 				RefColumns: []*schema.Column{DoHiemsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "vu_khis_hes_vu_khi",
-				Columns:    []*schema.Column{VuKhisColumns[7]},
+				Columns:    []*schema.Column{VuKhisColumns[8]},
 				RefColumns: []*schema.Column{HesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "vu_khis_loai_vu_khis_vu_khi",
-				Columns:    []*schema.Column{VuKhisColumns[8]},
+				Columns:    []*schema.Column{VuKhisColumns[9]},
 				RefColumns: []*schema.Column{LoaiVuKhisColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -135,27 +136,27 @@ var (
 			{
 				Name:    "ix_vukhi_loai_dohiem",
 				Unique:  false,
-				Columns: []*schema.Column{VuKhisColumns[8], VuKhisColumns[6]},
+				Columns: []*schema.Column{VuKhisColumns[9], VuKhisColumns[7]},
 			},
 			{
 				Name:    "ix_vukhi_loai_he",
 				Unique:  false,
-				Columns: []*schema.Column{VuKhisColumns[8], VuKhisColumns[7]},
+				Columns: []*schema.Column{VuKhisColumns[9], VuKhisColumns[8]},
 			},
 			{
 				Name:    "ix_vukhi_loai_he_dohiem",
 				Unique:  false,
-				Columns: []*schema.Column{VuKhisColumns[8], VuKhisColumns[7], VuKhisColumns[6]},
+				Columns: []*schema.Column{VuKhisColumns[9], VuKhisColumns[8], VuKhisColumns[7]},
 			},
 			{
 				Name:    "ix_vukhi_loai_satthuong",
 				Unique:  false,
-				Columns: []*schema.Column{VuKhisColumns[8], VuKhisColumns[2]},
+				Columns: []*schema.Column{VuKhisColumns[9], VuKhisColumns[2]},
 			},
 			{
 				Name:    "ix_vukhi_ma_dohiem",
 				Unique:  false,
-				Columns: []*schema.Column{VuKhisColumns[6]},
+				Columns: []*schema.Column{VuKhisColumns[7]},
 			},
 		},
 	}

@@ -29,6 +29,7 @@ const (
 	VuKhiService_GetAllTocDoDanh_FullMethodName      = "/v1.VuKhiService/GetAllTocDoDanh"
 	VuKhiService_GetAllTamDanh_FullMethodName        = "/v1.VuKhiService/GetAllTamDanh"
 	VuKhiService_Search_FullMethodName               = "/v1.VuKhiService/Search"
+	VuKhiService_LayVersion_FullMethodName           = "/v1.VuKhiService/LayVersion"
 )
 
 // VuKhiServiceClient is the client API for VuKhiService service.
@@ -53,6 +54,8 @@ type VuKhiServiceClient interface {
 	GetAllTamDanh(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*DanhSachIntVuKhi, error)
 	// POST /vukhi/ent/search
 	Search(ctx context.Context, in *TimKiemRequest, opts ...grpc.CallOption) (*DanhSachVuKhi, error)
+	// service VuKhiService {
+	LayVersion(ctx context.Context, in *LayVersionRequest, opts ...grpc.CallOption) (*LayVersionResponse, error)
 }
 
 type vuKhiServiceClient struct {
@@ -153,6 +156,16 @@ func (c *vuKhiServiceClient) Search(ctx context.Context, in *TimKiemRequest, opt
 	return out, nil
 }
 
+func (c *vuKhiServiceClient) LayVersion(ctx context.Context, in *LayVersionRequest, opts ...grpc.CallOption) (*LayVersionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LayVersionResponse)
+	err := c.cc.Invoke(ctx, VuKhiService_LayVersion_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VuKhiServiceServer is the server API for VuKhiService service.
 // All implementations must embed UnimplementedVuKhiServiceServer
 // for forward compatibility.
@@ -175,6 +188,8 @@ type VuKhiServiceServer interface {
 	GetAllTamDanh(context.Context, *emptypb.Empty) (*DanhSachIntVuKhi, error)
 	// POST /vukhi/ent/search
 	Search(context.Context, *TimKiemRequest) (*DanhSachVuKhi, error)
+	// service VuKhiService {
+	LayVersion(context.Context, *LayVersionRequest) (*LayVersionResponse, error)
 	mustEmbedUnimplementedVuKhiServiceServer()
 }
 
@@ -211,6 +226,9 @@ func (UnimplementedVuKhiServiceServer) GetAllTamDanh(context.Context, *emptypb.E
 }
 func (UnimplementedVuKhiServiceServer) Search(context.Context, *TimKiemRequest) (*DanhSachVuKhi, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Search not implemented")
+}
+func (UnimplementedVuKhiServiceServer) LayVersion(context.Context, *LayVersionRequest) (*LayVersionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LayVersion not implemented")
 }
 func (UnimplementedVuKhiServiceServer) mustEmbedUnimplementedVuKhiServiceServer() {}
 func (UnimplementedVuKhiServiceServer) testEmbeddedByValue()                      {}
@@ -395,6 +413,24 @@ func _VuKhiService_Search_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VuKhiService_LayVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LayVersionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VuKhiServiceServer).LayVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VuKhiService_LayVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VuKhiServiceServer).LayVersion(ctx, req.(*LayVersionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VuKhiService_ServiceDesc is the grpc.ServiceDesc for VuKhiService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -437,6 +473,10 @@ var VuKhiService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Search",
 			Handler:    _VuKhiService_Search_Handler,
+		},
+		{
+			MethodName: "LayVersion",
+			Handler:    _VuKhiService_LayVersion_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

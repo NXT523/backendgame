@@ -18,8 +18,9 @@ import (
 // HeUpdate is the builder for updating He entities.
 type HeUpdate struct {
 	config
-	hooks    []Hook
-	mutation *HeMutation
+	hooks     []Hook
+	mutation  *HeMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the HeUpdate builder.
@@ -145,6 +146,12 @@ func (_u *HeUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *HeUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *HeUpdate {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *HeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -211,6 +218,7 @@ func (_u *HeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{he.Label}
@@ -226,9 +234,10 @@ func (_u *HeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // HeUpdateOne is the builder for updating a single He entity.
 type HeUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *HeMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *HeMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetTenHe sets the "ten_he" field.
@@ -361,6 +370,12 @@ func (_u *HeUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *HeUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *HeUpdateOne {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *HeUpdateOne) sqlSave(ctx context.Context) (_node *He, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -444,6 +459,7 @@ func (_u *HeUpdateOne) sqlSave(ctx context.Context) (_node *He, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(_u.modifiers...)
 	_node = &He{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

@@ -22,6 +22,8 @@ const (
 	FieldTamDanh = "tam_danh"
 	// FieldMoTa holds the string denoting the mo_ta field in the database.
 	FieldMoTa = "mo_ta"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 	// FieldMaLoai holds the string denoting the ma_loai field in the database.
 	FieldMaLoai = "ma_loai"
 	// FieldMaDoHiem holds the string denoting the ma_do_hiem field in the database.
@@ -73,6 +75,7 @@ var Columns = []string{
 	FieldTocDoDanh,
 	FieldTamDanh,
 	FieldMoTa,
+	FieldVersion,
 	FieldMaLoai,
 	FieldMaDoHiem,
 	FieldMaHe,
@@ -99,6 +102,8 @@ var (
 	DefaultTamDanh int
 	// MoTaValidator is a validator for the "mo_ta" field. It is called by the builders before save.
 	MoTaValidator func(string) error
+	// DefaultVersion holds the default value on creation for the "version" field.
+	DefaultVersion int64
 )
 
 // OrderOption defines the ordering options for the VuKhi queries.
@@ -132,6 +137,11 @@ func ByTamDanh(opts ...sql.OrderTermOption) OrderOption {
 // ByMoTa orders the results by the mo_ta field.
 func ByMoTa(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMoTa, opts...).ToFunc()
+}
+
+// ByVersion orders the results by the version field.
+func ByVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersion, opts...).ToFunc()
 }
 
 // ByMaLoai orders the results by the ma_loai field.

@@ -28,6 +28,8 @@ func (VuKhi) Fields() []ent.Field {
 		field.String("mo_ta").
 			MaxLen(255).
 			Optional(),
+		field.Int64("version").
+			Default(1),
 
 		// FK: NOT NULL vì edge .Required()
 		field.Int("ma_loai").
