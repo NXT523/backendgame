@@ -76,18 +76,18 @@ func init() {
 	he.MoTaValidator = heDescMoTa.Validators[0].(func(string) error)
 	loaivukhiFields := schema.LoaiVuKhi{}.Fields()
 	_ = loaivukhiFields
-	// loaivukhiDescTenLoai is the schema descriptor for ten_loai field.
-	loaivukhiDescTenLoai := loaivukhiFields[1].Descriptor()
-	// loaivukhi.TenLoaiValidator is a validator for the "ten_loai" field. It is called by the builders before save.
-	loaivukhi.TenLoaiValidator = func() func(string) error {
-		validators := loaivukhiDescTenLoai.Validators
+	// loaivukhiDescTenLoaiVuKhi is the schema descriptor for ten_loai_vu_khi field.
+	loaivukhiDescTenLoaiVuKhi := loaivukhiFields[1].Descriptor()
+	// loaivukhi.TenLoaiVuKhiValidator is a validator for the "ten_loai_vu_khi" field. It is called by the builders before save.
+	loaivukhi.TenLoaiVuKhiValidator = func() func(string) error {
+		validators := loaivukhiDescTenLoaiVuKhi.Validators
 		fns := [...]func(string) error{
 			validators[0].(func(string) error),
 			validators[1].(func(string) error),
 		}
-		return func(ten_loai string) error {
+		return func(ten_loai_vu_khi string) error {
 			for _, fn := range fns {
-				if err := fn(ten_loai); err != nil {
+				if err := fn(ten_loai_vu_khi); err != nil {
 					return err
 				}
 			}
@@ -137,5 +137,5 @@ func init() {
 	// vukhiDescVersion is the schema descriptor for version field.
 	vukhiDescVersion := vukhiFields[6].Descriptor()
 	// vukhi.DefaultVersion holds the default value on creation for the version field.
-	vukhi.DefaultVersion = vukhiDescVersion.Default.(int64)
+	vukhi.DefaultVersion = vukhiDescVersion.Default.(int)
 }

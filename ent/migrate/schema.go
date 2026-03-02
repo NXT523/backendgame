@@ -72,8 +72,8 @@ var (
 	}
 	// LoaiVuKhisColumns holds the columns for the "loai_vu_khis" table.
 	LoaiVuKhisColumns = []*schema.Column{
-		{Name: "ma_loai", Type: field.TypeInt, Increment: true},
-		{Name: "ten_loai", Type: field.TypeString, Unique: true, Size: 50},
+		{Name: "ma_loai_vu_khi", Type: field.TypeInt, Increment: true},
+		{Name: "ten_loai_vu_khi", Type: field.TypeString, Unique: true, Size: 50},
 		{Name: "mo_ta", Type: field.TypeString, Nullable: true, Size: 255},
 	}
 	// LoaiVuKhisTable holds the schema information for the "loai_vu_khis" table.
@@ -97,10 +97,10 @@ var (
 		{Name: "toc_do_danh", Type: field.TypeFloat64, Default: 1},
 		{Name: "tam_danh", Type: field.TypeInt, Default: 1},
 		{Name: "mo_ta", Type: field.TypeString, Nullable: true, Size: 255},
-		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "version", Type: field.TypeInt, Default: 1},
 		{Name: "ma_do_hiem", Type: field.TypeInt},
 		{Name: "ma_he", Type: field.TypeInt},
-		{Name: "ma_loai", Type: field.TypeInt},
+		{Name: "ma_loai_vu_khi", Type: field.TypeInt},
 	}
 	// VuKhisTable holds the schema information for the "vu_khis" table.
 	VuKhisTable = &schema.Table{

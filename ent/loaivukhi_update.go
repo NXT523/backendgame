@@ -18,9 +18,8 @@ import (
 // LoaiVuKhiUpdate is the builder for updating LoaiVuKhi entities.
 type LoaiVuKhiUpdate struct {
 	config
-	hooks     []Hook
-	mutation  *LoaiVuKhiMutation
-	modifiers []func(*sql.UpdateBuilder)
+	hooks    []Hook
+	mutation *LoaiVuKhiMutation
 }
 
 // Where appends a list predicates to the LoaiVuKhiUpdate builder.
@@ -29,16 +28,16 @@ func (_u *LoaiVuKhiUpdate) Where(ps ...predicate.LoaiVuKhi) *LoaiVuKhiUpdate {
 	return _u
 }
 
-// SetTenLoai sets the "ten_loai" field.
-func (_u *LoaiVuKhiUpdate) SetTenLoai(v string) *LoaiVuKhiUpdate {
-	_u.mutation.SetTenLoai(v)
+// SetTenLoaiVuKhi sets the "ten_loai_vu_khi" field.
+func (_u *LoaiVuKhiUpdate) SetTenLoaiVuKhi(v string) *LoaiVuKhiUpdate {
+	_u.mutation.SetTenLoaiVuKhi(v)
 	return _u
 }
 
-// SetNillableTenLoai sets the "ten_loai" field if the given value is not nil.
-func (_u *LoaiVuKhiUpdate) SetNillableTenLoai(v *string) *LoaiVuKhiUpdate {
+// SetNillableTenLoaiVuKhi sets the "ten_loai_vu_khi" field if the given value is not nil.
+func (_u *LoaiVuKhiUpdate) SetNillableTenLoaiVuKhi(v *string) *LoaiVuKhiUpdate {
 	if v != nil {
-		_u.SetTenLoai(*v)
+		_u.SetTenLoaiVuKhi(*v)
 	}
 	return _u
 }
@@ -133,9 +132,9 @@ func (_u *LoaiVuKhiUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *LoaiVuKhiUpdate) check() error {
-	if v, ok := _u.mutation.TenLoai(); ok {
-		if err := loaivukhi.TenLoaiValidator(v); err != nil {
-			return &ValidationError{Name: "ten_loai", err: fmt.Errorf(`ent: validator failed for field "LoaiVuKhi.ten_loai": %w`, err)}
+	if v, ok := _u.mutation.TenLoaiVuKhi(); ok {
+		if err := loaivukhi.TenLoaiVuKhiValidator(v); err != nil {
+			return &ValidationError{Name: "ten_loai_vu_khi", err: fmt.Errorf(`ent: validator failed for field "LoaiVuKhi.ten_loai_vu_khi": %w`, err)}
 		}
 	}
 	if v, ok := _u.mutation.MoTa(); ok {
@@ -144,12 +143,6 @@ func (_u *LoaiVuKhiUpdate) check() error {
 		}
 	}
 	return nil
-}
-
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *LoaiVuKhiUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *LoaiVuKhiUpdate {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
 }
 
 func (_u *LoaiVuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
@@ -164,8 +157,8 @@ func (_u *LoaiVuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			}
 		}
 	}
-	if value, ok := _u.mutation.TenLoai(); ok {
-		_spec.SetField(loaivukhi.FieldTenLoai, field.TypeString, value)
+	if value, ok := _u.mutation.TenLoaiVuKhi(); ok {
+		_spec.SetField(loaivukhi.FieldTenLoaiVuKhi, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.MoTa(); ok {
 		_spec.SetField(loaivukhi.FieldMoTa, field.TypeString, value)
@@ -218,7 +211,6 @@ func (_u *LoaiVuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{loaivukhi.Label}
@@ -234,22 +226,21 @@ func (_u *LoaiVuKhiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // LoaiVuKhiUpdateOne is the builder for updating a single LoaiVuKhi entity.
 type LoaiVuKhiUpdateOne struct {
 	config
-	fields    []string
-	hooks     []Hook
-	mutation  *LoaiVuKhiMutation
-	modifiers []func(*sql.UpdateBuilder)
+	fields   []string
+	hooks    []Hook
+	mutation *LoaiVuKhiMutation
 }
 
-// SetTenLoai sets the "ten_loai" field.
-func (_u *LoaiVuKhiUpdateOne) SetTenLoai(v string) *LoaiVuKhiUpdateOne {
-	_u.mutation.SetTenLoai(v)
+// SetTenLoaiVuKhi sets the "ten_loai_vu_khi" field.
+func (_u *LoaiVuKhiUpdateOne) SetTenLoaiVuKhi(v string) *LoaiVuKhiUpdateOne {
+	_u.mutation.SetTenLoaiVuKhi(v)
 	return _u
 }
 
-// SetNillableTenLoai sets the "ten_loai" field if the given value is not nil.
-func (_u *LoaiVuKhiUpdateOne) SetNillableTenLoai(v *string) *LoaiVuKhiUpdateOne {
+// SetNillableTenLoaiVuKhi sets the "ten_loai_vu_khi" field if the given value is not nil.
+func (_u *LoaiVuKhiUpdateOne) SetNillableTenLoaiVuKhi(v *string) *LoaiVuKhiUpdateOne {
 	if v != nil {
-		_u.SetTenLoai(*v)
+		_u.SetTenLoaiVuKhi(*v)
 	}
 	return _u
 }
@@ -357,9 +348,9 @@ func (_u *LoaiVuKhiUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *LoaiVuKhiUpdateOne) check() error {
-	if v, ok := _u.mutation.TenLoai(); ok {
-		if err := loaivukhi.TenLoaiValidator(v); err != nil {
-			return &ValidationError{Name: "ten_loai", err: fmt.Errorf(`ent: validator failed for field "LoaiVuKhi.ten_loai": %w`, err)}
+	if v, ok := _u.mutation.TenLoaiVuKhi(); ok {
+		if err := loaivukhi.TenLoaiVuKhiValidator(v); err != nil {
+			return &ValidationError{Name: "ten_loai_vu_khi", err: fmt.Errorf(`ent: validator failed for field "LoaiVuKhi.ten_loai_vu_khi": %w`, err)}
 		}
 	}
 	if v, ok := _u.mutation.MoTa(); ok {
@@ -368,12 +359,6 @@ func (_u *LoaiVuKhiUpdateOne) check() error {
 		}
 	}
 	return nil
-}
-
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *LoaiVuKhiUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *LoaiVuKhiUpdateOne {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
 }
 
 func (_u *LoaiVuKhiUpdateOne) sqlSave(ctx context.Context) (_node *LoaiVuKhi, err error) {
@@ -405,8 +390,8 @@ func (_u *LoaiVuKhiUpdateOne) sqlSave(ctx context.Context) (_node *LoaiVuKhi, er
 			}
 		}
 	}
-	if value, ok := _u.mutation.TenLoai(); ok {
-		_spec.SetField(loaivukhi.FieldTenLoai, field.TypeString, value)
+	if value, ok := _u.mutation.TenLoaiVuKhi(); ok {
+		_spec.SetField(loaivukhi.FieldTenLoaiVuKhi, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.MoTa(); ok {
 		_spec.SetField(loaivukhi.FieldMoTa, field.TypeString, value)
@@ -459,7 +444,6 @@ func (_u *LoaiVuKhiUpdateOne) sqlSave(ctx context.Context) (_node *LoaiVuKhi, er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.AddModifiers(_u.modifiers...)
 	_node = &LoaiVuKhi{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

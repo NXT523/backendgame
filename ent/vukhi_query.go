@@ -459,9 +459,6 @@ func (_q *VuKhiQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*VuKhi,
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -496,7 +493,7 @@ func (_q *VuKhiQuery) loadLoai(ctx context.Context, query *LoaiVuKhiQuery, nodes
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*VuKhi)
 	for i := range nodes {
-		fk := nodes[i].MaLoai
+		fk := nodes[i].MaLoaiVuKhi
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -513,7 +510,7 @@ func (_q *VuKhiQuery) loadLoai(ctx context.Context, query *LoaiVuKhiQuery, nodes
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "ma_loai" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "ma_loai_vu_khi" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -582,9 +579,6 @@ func (_q *VuKhiQuery) loadHe(ctx context.Context, query *HeQuery, nodes []*VuKhi
 
 func (_q *VuKhiQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
 		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
@@ -609,7 +603,7 @@ func (_q *VuKhiQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 		if _q.withLoai != nil {
-			_spec.Node.AddColumnOnce(vukhi.FieldMaLoai)
+			_spec.Node.AddColumnOnce(vukhi.FieldMaLoaiVuKhi)
 		}
 		if _q.withDoHiem != nil {
 			_spec.Node.AddColumnOnce(vukhi.FieldMaDoHiem)
@@ -656,9 +650,6 @@ func (_q *VuKhiQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, m := range _q.modifiers {
-		m(selector)
-	}
 	for _, p := range _q.predicates {
 		p(selector)
 	}
@@ -674,12 +665,6 @@ func (_q *VuKhiQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (_q *VuKhiQuery) Modify(modifiers ...func(s *sql.Selector)) *VuKhiSelect {
-	_q.modifiers = append(_q.modifiers, modifiers...)
-	return _q.Select()
 }
 
 // VuKhiGroupBy is the group-by builder for VuKhi entities.

@@ -2,7 +2,7 @@ package interceptor
 
 import (
 	"context"
-	v1 "game/v1"
+	v1 "game/v1/proto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

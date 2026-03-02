@@ -12,12 +12,12 @@ type LoaiVuKhi struct{ ent.Schema }
 func (LoaiVuKhi) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("id").
-			StorageKey("ma_loai").
+			StorageKey("ma_loai_vu_khi").
 			Immutable().
 			Comment("Mã loại vũ khí"),
-		field.String("ten_loai").
+		field.String("ten_loai_vu_khi").
 			MaxLen(50).NotEmpty().Unique().
-			Comment("Tên loại"),
+			Comment("Tên loại vũ khí"),
 		field.String("mo_ta").
 			MaxLen(255).Optional().Comment("Mô tả"),
 	}
@@ -25,9 +25,9 @@ func (LoaiVuKhi) Fields() []ent.Field {
 
 func (LoaiVuKhi) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("ten_loai").
+		index.Fields("ten_loai_vu_khi").
 			Unique().
-			StorageKey("uq_loaivukhi_ten"),// 1
+			StorageKey("uq_loaivukhi_ten"),
 	}
 }
 

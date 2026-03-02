@@ -28,12 +28,12 @@ func (VuKhi) Fields() []ent.Field {
 		field.String("mo_ta").
 			MaxLen(255).
 			Optional(),
-		field.Int64("version").
+		field.Int("version").
 			Default(1),
 
 		// FK: NOT NULL vì edge .Required()
-		field.Int("ma_loai").
-			Comment("FK -> loai_vu_khis.ma_loai"),
+		field.Int("ma_loai_vu_khi").
+			Comment("FK -> loai_vu_khis.ma_loai_vu_khi"),
 		field.Int("ma_do_hiem").
 			Comment("FK -> do_hiems.ma_do_hiem"),
 		field.Int("ma_he").
@@ -47,17 +47,17 @@ func (VuKhi) Indexes() []ent.Index {
 			Unique().
 			StorageKey("uq_vukhi_ten"), // 1
 
-		index.Fields("ma_loai", "ma_do_hiem").
-			StorageKey("ix_vukhi_loai_dohiem"), // 2
+		index.Fields("ma_loai_vu_khi", "ma_do_hiem").
+			StorageKey("ix_vukhi_loaivukhi_dohiem"), // 2
 
-		index.Fields("ma_loai", "ma_he").
-			StorageKey("ix_vukhi_loai_he"), // 3
+		index.Fields("ma_loai_vu_khi", "ma_he").
+			StorageKey("ix_vukhi_loaivukhi_he"), // 3
 
-		index.Fields("ma_loai", "ma_he", "ma_do_hiem").
-			StorageKey("ix_vukhi_loai_he_dohiem"), // 4
+		index.Fields("ma_loai_vu_khi", "ma_he", "ma_do_hiem").
+			StorageKey("ix_vukhi_loaivukhi_he_dohiem"), // 4
 
-		index.Fields("ma_loai", "sat_thuong_co_ban").
-			StorageKey("ix_vukhi_loai_satthuong"), // 5
+		index.Fields("ma_loai_vu_khi", "sat_thuong_co_ban").
+			StorageKey("ix_vukhi_loaivukhi_satthuong"), // 5
 
 		index.Fields("ma_do_hiem").
 			StorageKey("ix_vukhi_ma_dohiem"), // 6
@@ -66,9 +66,9 @@ func (VuKhi) Indexes() []ent.Index {
 
 func (VuKhi) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("loai", LoaiVuKhi.Type).
+		edge.From("loaivukhi", LoaiVuKhi.Type).
 			Ref("vu_khi").
-			Field("ma_loai").
+			Field("ma_loai_vu_khi").
 			Unique().
 			Required(),
 

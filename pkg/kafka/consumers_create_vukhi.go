@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"game/internal/config"
+	"game/internal/utils"
 	"game/internal/events"
 	"game/pkg/logx"
 
@@ -16,8 +16,7 @@ import (
 
 // ----- Reader helper -----
 func taoReader(topic, group string) *kafka.Reader {
-	cfg := config.DocCauHinh()
-	brokers := tachBrokers(cfg.KafkaBrokers)
+	brokers := utils.GetenvStrings("KAFKA_BROKERS", nil)
 	return kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  brokers,
 		Topic:    topic,
@@ -46,18 +45,16 @@ func kafkaKV(group string, m kafka.Message) map[string]any {
 	return kv
 }
 
-// ----- CONSUMER 2: AUDIT LOG -----
 func ChayConsumerAuditVuKhi(ctx context.Context, elog *logx.LoggerElastic) {
 	const group = "vukhi-audit-service"
-	cfg := config.DocCauHinh()
-	r := taoReader(cfg.KafkaTopicCreate, group)
+	r := taoReader(utils.GetenvString("KAFKA_TOPIC_CREATE", ""), group)
 	defer r.Close()
 
 	elog.Info(ctx, "Consumer started", map[string]any{
 		"event.dataset":        "kafka",
 		"service.component":    "kafka-consumer",
 		"kafka.consumer_group": group,
-		"kafka.topic":          cfg.KafkaTopicCreate,
+		"kafka.topic":          utils.GetenvString("KAFKA_TOPIC_CREATE", ""),
 	})
 
 	for {
@@ -65,7 +62,7 @@ func ChayConsumerAuditVuKhi(ctx context.Context, elog *logx.LoggerElastic) {
 		m, err := r.FetchMessage(ctx)
 		waitMs := time.Since(tWait).Milliseconds()
 		if err != nil {
-			logx.KafkaGhiLogConsumeErr(ctx, elog, group, cfg.KafkaTopicCreate, err)
+			logx.KafkaGhiLogConsumeErr(ctx, elog, group, utils.GetenvString("KAFKA_TOPIC_CREATE", ""), err)
 			time.Sleep(2 * time.Second)
 			continue
 		}

@@ -26,10 +26,9 @@ sử lý nhiều request đồng thời nhiều backend trên 1 database
 
 
 
-1. Idempotency Check (Chống lặp Request do mạng)
-2. Redis Distributed Lock (Khóa phân tán )
-
-Database Transaction: Để đảm bảo tính toàn vẹn (ACID).
-
-Optimistic Locking (Version): Để đảm bảo người đến sau không ghi đè bừa bãi lên dữ liệu người đi trước vừa sửa (Conflict resolution).
-
+Phương pháp,                    Công cụ,                                Tốc độ phản hồi (Latency),              Khả năng xử lý (RPS)
+Local Lock,                 sync.Mutex(Go),                             ~10-50 nanoseconds,                         Hàng triệu
+Distributed Lock,               Redis (RAM),                            ~0.5 - 2 milliseconds,                  "10,000 - 50,000"
+Distributed Lock,           Etcd/Zookeeper,                             ~5 - 20 milliseconds,                   "1,000 - 3,000"
+Database Lock,              SELECT FOR UPDATE,                          ~10 - 50 milliseconds,                    "500 - 1,500"
+Message Queue,              Kafka / RabbitMQ,                           ~20 - 100 milliseconds,                 Rất cao (nhưng bị trễ)

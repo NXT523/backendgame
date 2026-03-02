@@ -31,9 +31,9 @@ type VuKhi struct {
 	// MoTa holds the value of the "mo_ta" field.
 	MoTa string `json:"mo_ta,omitempty"`
 	// Version holds the value of the "version" field.
-	Version int64 `json:"version,omitempty"`
-	// FK -> loai_vu_khis.ma_loai
-	MaLoai int `json:"ma_loai,omitempty"`
+	Version int `json:"version,omitempty"`
+	// FK -> loai_vu_khis.ma_loai_vu_khi
+	MaLoaiVuKhi int `json:"ma_loai_vu_khi,omitempty"`
 	// FK -> do_hiems.ma_do_hiem
 	MaDoHiem int `json:"ma_do_hiem,omitempty"`
 	// FK -> hes.ma_he
@@ -97,7 +97,7 @@ func (*VuKhi) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case vukhi.FieldTocDoDanh:
 			values[i] = new(sql.NullFloat64)
-		case vukhi.FieldID, vukhi.FieldSatThuongCoBan, vukhi.FieldTamDanh, vukhi.FieldVersion, vukhi.FieldMaLoai, vukhi.FieldMaDoHiem, vukhi.FieldMaHe:
+		case vukhi.FieldID, vukhi.FieldSatThuongCoBan, vukhi.FieldTamDanh, vukhi.FieldVersion, vukhi.FieldMaLoaiVuKhi, vukhi.FieldMaDoHiem, vukhi.FieldMaHe:
 			values[i] = new(sql.NullInt64)
 		case vukhi.FieldTenVuKhi, vukhi.FieldMoTa:
 			values[i] = new(sql.NullString)
@@ -156,13 +156,13 @@ func (_m *VuKhi) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field version", values[i])
 			} else if value.Valid {
-				_m.Version = value.Int64
+				_m.Version = int(value.Int64)
 			}
-		case vukhi.FieldMaLoai:
+		case vukhi.FieldMaLoaiVuKhi:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field ma_loai", values[i])
+				return fmt.Errorf("unexpected type %T for field ma_loai_vu_khi", values[i])
 			} else if value.Valid {
-				_m.MaLoai = int(value.Int64)
+				_m.MaLoaiVuKhi = int(value.Int64)
 			}
 		case vukhi.FieldMaDoHiem:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -245,8 +245,8 @@ func (_m *VuKhi) String() string {
 	builder.WriteString("version=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Version))
 	builder.WriteString(", ")
-	builder.WriteString("ma_loai=")
-	builder.WriteString(fmt.Sprintf("%v", _m.MaLoai))
+	builder.WriteString("ma_loai_vu_khi=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MaLoaiVuKhi))
 	builder.WriteString(", ")
 	builder.WriteString("ma_do_hiem=")
 	builder.WriteString(fmt.Sprintf("%v", _m.MaDoHiem))

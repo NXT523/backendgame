@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"game/internal/config"
+	"game/internal/utils"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -13,30 +13,28 @@ import (
 )
 
 // Tạo client Memcached
-func NewMemcacheClient(_ context.Context, cfg config.CauHinh) (*memcache.Client, error) {
-	addr := strings.TrimSpace(cfg.MemcachedAddr)
-	if addr == "" {
-		addr = "127.0.0.1:11211"
-	}
+func NewMemcacheClient(_ context.Context) (*memcache.Client, error) {
+	addr := strings.TrimSpace(utils.GetenvString("MEMCACHED_ADDR", "127.0.0.1:11211"))
 	mc := memcache.New(addr)
+	timeout := utils.GetenvDuration("MEMCACHED_TIMEOUT", 200*time.Millisecond)
+	if timeout > 0 {
+		mc.Timeout = timeout
+	}
+	maxIdleConns := utils.GetenvInt("MEMCACHED_MAX_IDLE_CONNS", 100)
+	if maxIdleConns > 0 {
+		mc.MaxIdleConns = maxIdleConns
+	}
 
-	if cfg.MemcachedTimeout > 0 {
-		mc.Timeout = cfg.MemcachedTimeout
-	}
-	if cfg.MemcachedMaxIdleConns > 0 {
-		mc.MaxIdleConns = cfg.MemcachedMaxIdleConns
-	}
+	key := utils.GetenvString("MEMCACHED_HEALTH_KEY", "healthcheck")
+	ttlDur := utils.GetenvDuration("MEMCACHED_HEALTH_TTL", 1*time.Second)
 
-	// Healthcheck (gomemcache không có Ping)
-	key := cfg.MemcachedHealthKey
-	if key == "" {
-		key = "healthcheck"
-	}
-	ttl := int32(1)
-	if cfg.MemcachedHealthTTL > 0 {
-		ttl = int32(cfg.MemcachedHealthTTL / time.Second)
-	}
-	if err := mc.Set(&memcache.Item{Key: key, Value: []byte("ok"), Expiration: ttl}); err != nil {
+	ttl := int32(ttlDur / time.Second)
+
+	if err := mc.Set(&memcache.Item{
+		Key:        key,
+		Value:      []byte("ok"),
+		Expiration: ttl,
+	}); err != nil {
 		return nil, err
 	}
 	if _, err := mc.Get(key); err != nil {

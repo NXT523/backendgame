@@ -1,0 +1,300 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "game/proto/v1/proto;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+message VuKhi {
+  int32  ma_vu_khi         = 1;
+  string ten_vu_khi        = 2;
+  int32  sat_thuong_co_ban = 3;
+  double toc_do_danh       = 4;
+  int32  tam_danh          = 5;
+  string mo_ta             = 6;
+
+  int32 ma_loai_vu_khi = 7;
+  int32 ma_do_hiem     = 8;
+  int32 ma_he          = 9;
+
+  // "edges" (join)
+  string ten_loai          = 20;
+  string ten_do_hiem       = 21;
+  string ten_he            = 22;
+  double sat_thuong_bonus  = 23;
+  double toc_do_danh_bonus = 24;
+  int32  so_luong          = 25;
+  string mau_sac           = 26;
+  int32  cap_bac           = 27;
+  int32  version           = 99;
+}
+
+message TaoVuKhiRequest {
+  string ten_vu_khi        = 1;
+  int32  sat_thuong_co_ban = 2;
+  double toc_do_danh       = 3;
+  int32  tam_danh          = 4;
+  string mo_ta             = 5;
+  int32  ma_loai_vu_khi    = 6;
+  int32  ma_do_hiem        = 7;
+  int32  ma_he             = 8;
+  string idempotency_key   = 100;
+}
+
+message CapNhatTheoTenVuKhiRequest {
+  // tên cũ lấy từ path
+  string ten_vu_khi = 1;
+  string ten_vu_khi_new = 2;
+
+  int32  sat_thuong_co_ban = 3;
+  double toc_do_danh       = 4;
+  int32  tam_danh          = 5;
+  string mo_ta             = 6;
+  int32  ma_loai_vu_khi    = 7;
+  int32  ma_do_hiem        = 8;
+  int32  ma_he             = 9;
+  int32  version           = 10;
+}
+
+message XoaTheoTenVuKhiRequest {
+  string ten_vu_khi = 1;
+}
+
+message XoaTheoTenVuKhiResponse {
+  string deleted_name = 1;
+  int32  ma_vu_khi    = 2;
+}
+
+message LayTatCaRequest {
+  string q = 1;
+}
+
+message DanhSachVuKhi {
+  int32          total       = 1;
+  int32          item_count  = 2;
+  repeated VuKhi items       = 3;
+  string         next_cursor = 4;
+  bool           has_more    = 5;
+
+}
+
+message DanhSachIntVuKhi {
+  int32          total = 1;
+  repeated int32 items = 2;
+}
+
+message DanhSachStringVuKhi {
+  int32           total = 1;
+  repeated string items = 2;
+}
+
+message DanhSachDoubleVuKhi {
+  int32           total = 1;
+  repeated double items = 2;
+}
+
+message LayVersionRequest {
+  string ten_vu_khi = 1;
+}
+
+message LayVersionResponse {
+  int32 version = 1;
+}
+
+message BatchUpdateResult {
+  int32                    total   = 1;
+  int32                    success = 2;
+  int32                    failed  = 3;
+  repeated BatchItemDetail details = 5;
+}
+
+message BatchItemDetail {
+  int32  index   = 1;
+  string ten_vu_khi    = 2;
+  bool   success = 3;
+  int32  code    = 4;
+  string message = 5;
+}
+
+// Sửa message trả về cho từng item
+message UpdateItemResult {
+  string ten_vu_khi          = 1;
+  string ten_vu_khi_new = 2;
+  bool   success       = 3;
+  optional string error_message = 4;
+  optional int32  new_version   = 5;
+}
+
+message TimKiemVuKhiRequest {
+  // ---- Vũ khí / khóa ngoại (EQ) ----
+  google.protobuf.Int32Value ma_vu_khi      = 1;
+  google.protobuf.Int32Value ma_loai_vu_khi = 2;
+  google.protobuf.Int32Value ma_he          = 3;
+  google.protobuf.Int32Value ma_do_hiem     = 4;
+
+  // ---- Tên/chuỗi chứa ----
+  string ten_vu_khi  = 5;
+  string ten_loai    = 6;
+  string ten_he      = 7;
+  string ten_do_hiem = 8;
+
+  // ---- Thuộc tính vũ khí (EQ) ----
+  google.protobuf.Int32Value  sat_thuong_co_ban = 9;
+  google.protobuf.DoubleValue toc_do_danh       = 10;
+  google.protobuf.Int32Value  tam_danh          = 11;
+
+  // ---- Thuộc tính độ hiếm (EQ) ----
+  string                      mau_sac           = 12;
+  google.protobuf.DoubleValue sat_thuong_bonus  = 13;
+  google.protobuf.DoubleValue toc_do_danh_bonus = 14;
+  google.protobuf.Int32Value  so_luong          = 15;
+
+  // ---- Range có sẵn cho vũ khí ----
+  google.protobuf.DoubleValue min_ma_vu_khi = 16;
+  google.protobuf.DoubleValue max_ma_vu_khi = 17;
+
+  google.protobuf.Int32Value min_sat_thuong_co_ban = 18;
+  google.protobuf.Int32Value max_sat_thuong_co_ban = 19;
+
+  google.protobuf.DoubleValue min_toc_do_danh = 20;
+  google.protobuf.DoubleValue max_toc_do_danh = 21;
+
+  google.protobuf.Int32Value min_tam_danh = 22;
+  google.protobuf.Int32Value max_tam_danh = 23;
+
+  // ---- Phân trang ----
+  int32 limit = 24;
+  reserved 25;
+  string cursor = 26;
+
+  // Range cho 6 trường Độ Hiếm
+  // 1) ten_do_hiem
+  string min_ten_do_hiem = 27;
+  string max_ten_do_hiem = 28;
+
+  // 2) so_luong
+  google.protobuf.Int32Value min_so_luong = 29;
+  google.protobuf.Int32Value max_so_luong = 30;
+
+  // 3) sat_thuong_bonus
+  google.protobuf.DoubleValue min_sat_thuong_bonus = 31;
+  google.protobuf.DoubleValue max_sat_thuong_bonus = 32;
+
+  // 4) toc_do_danh_bonus
+  google.protobuf.DoubleValue min_toc_do_danh_bonus = 33;
+  google.protobuf.DoubleValue max_toc_do_danh_bonus = 34;
+
+  // 5) mau_sac
+  string min_mau_sac = 35;
+  string max_mau_sac = 36;
+
+  // 6) cap_bac
+  google.protobuf.Int32Value min_cap_bac = 37;
+  google.protobuf.Int32Value max_cap_bac = 38;
+
+  string arrange_asc  = 39; // ASC cho các trường hợp lệ
+  string arrange_desc = 40; // DESC cho các trường hợp lệ
+
+  google.protobuf.Int32Value cap_bac = 41;
+
+}
+
+message DanhSachVuKhiStream {
+  int32          total = 1;
+  repeated VuKhi items = 2;
+}
+
+// VuKhiService quản lý các thao tác CRUD và tìm kiếm Vũ Khí
+service VuKhiService {
+  // POST /vukhi/ent/post
+  rpc CreateVuKhi (TaoVuKhiRequest) returns (VuKhi) {
+    option (google.api.http) = {
+      post: "/vukhi/ent/post"
+      body: "*"
+    };
+  }
+
+  // PUT /vukhi/ent/put-by-name/{name}
+  rpc UpdateByNameVuKhi (CapNhatTheoTenVuKhiRequest) returns (VuKhi) {
+  option (google.api.http) = {
+    put : "/vukhi/ent/put-by-name/{ten_vu_khi}"
+    body: "*"
+  };
+}
+
+  // DELETE /vukhi/ent/delete-by-name/{name}
+  rpc DeleteByNameVuKhi (XoaTheoTenVuKhiRequest) returns (XoaTheoTenVuKhiResponse) {
+    option (google.api.http) = {
+      delete: "/vukhi/ent/delete-by-name/{ten_vu_khi}"
+    };
+  }
+
+  // GET /vukhi/ent/getall?q=...
+  rpc GetAllVuKhi (LayTatCaRequest) returns (DanhSachVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/getall"
+    };
+  }
+
+  // GET /vukhi/ent/ten
+  rpc GetAllTenVuKhi (google.protobuf.Empty) returns (DanhSachStringVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/ten"
+    };
+  }
+
+  // GET /vukhi/ent/satthuongcoban
+  rpc GetAllSatThuongCoBan (google.protobuf.Empty) returns (DanhSachIntVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/satthuongcoban"
+    };
+  }
+
+  // GET /vukhi/ent/tocdo
+  rpc GetAllTocDoDanh (google.protobuf.Empty) returns (DanhSachDoubleVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/tocdo"
+    };
+  }
+
+  // GET /vukhi/ent/tamdanh
+  rpc GetAllTamDanh (google.protobuf.Empty) returns (DanhSachIntVuKhi) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/tamdanh"
+    };
+  }
+
+  // POST /vukhi/ent/search
+  rpc SearchVuKhi (TimKiemVuKhiRequest) returns (DanhSachVuKhi) {
+    option (google.api.http) = {
+      post: "/vukhi/ent/search"
+      body: "*"
+    };
+  }
+
+  // service VuKhiService {
+  rpc LayVersion(LayVersionRequest) returns (LayVersionResponse) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/version/{ten_vu_khi}"
+    };
+  }
+
+  //
+  rpc StreamServerSideGetVuKhi (LayTatCaRequest)
+  returns (stream DanhSachVuKhiStream) {
+    option (google.api.http) = {
+      get: "/vukhi/ent/stream"
+    };
+  }
+
+  //
+  rpc StreamClientSideUpdateVuKhi(stream CapNhatTheoTenVuKhiRequest)
+  returns (BatchUpdateResult);
+
+  //
+  rpc StreamBidirectionalUpdateVuKhi(stream CapNhatTheoTenVuKhiRequest)
+  returns (stream UpdateItemResult);
+}

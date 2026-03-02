@@ -20,9 +20,9 @@ type LoaiVuKhiCreate struct {
 	hooks    []Hook
 }
 
-// SetTenLoai sets the "ten_loai" field.
-func (_c *LoaiVuKhiCreate) SetTenLoai(v string) *LoaiVuKhiCreate {
-	_c.mutation.SetTenLoai(v)
+// SetTenLoaiVuKhi sets the "ten_loai_vu_khi" field.
+func (_c *LoaiVuKhiCreate) SetTenLoaiVuKhi(v string) *LoaiVuKhiCreate {
+	_c.mutation.SetTenLoaiVuKhi(v)
 	return _c
 }
 
@@ -95,12 +95,12 @@ func (_c *LoaiVuKhiCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *LoaiVuKhiCreate) check() error {
-	if _, ok := _c.mutation.TenLoai(); !ok {
-		return &ValidationError{Name: "ten_loai", err: errors.New(`ent: missing required field "LoaiVuKhi.ten_loai"`)}
+	if _, ok := _c.mutation.TenLoaiVuKhi(); !ok {
+		return &ValidationError{Name: "ten_loai_vu_khi", err: errors.New(`ent: missing required field "LoaiVuKhi.ten_loai_vu_khi"`)}
 	}
-	if v, ok := _c.mutation.TenLoai(); ok {
-		if err := loaivukhi.TenLoaiValidator(v); err != nil {
-			return &ValidationError{Name: "ten_loai", err: fmt.Errorf(`ent: validator failed for field "LoaiVuKhi.ten_loai": %w`, err)}
+	if v, ok := _c.mutation.TenLoaiVuKhi(); ok {
+		if err := loaivukhi.TenLoaiVuKhiValidator(v); err != nil {
+			return &ValidationError{Name: "ten_loai_vu_khi", err: fmt.Errorf(`ent: validator failed for field "LoaiVuKhi.ten_loai_vu_khi": %w`, err)}
 		}
 	}
 	if v, ok := _c.mutation.MoTa(); ok {
@@ -140,9 +140,9 @@ func (_c *LoaiVuKhiCreate) createSpec() (*LoaiVuKhi, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := _c.mutation.TenLoai(); ok {
-		_spec.SetField(loaivukhi.FieldTenLoai, field.TypeString, value)
-		_node.TenLoai = value
+	if value, ok := _c.mutation.TenLoaiVuKhi(); ok {
+		_spec.SetField(loaivukhi.FieldTenLoaiVuKhi, field.TypeString, value)
+		_node.TenLoaiVuKhi = value
 	}
 	if value, ok := _c.mutation.MoTa(); ok {
 		_spec.SetField(loaivukhi.FieldMoTa, field.TypeString, value)

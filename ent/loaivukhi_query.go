@@ -25,8 +25,8 @@ type LoaiVuKhiQuery struct {
 	inters     []Interceptor
 	predicates []predicate.LoaiVuKhi
 	withVuKhi  *VuKhiQuery
-	modifiers  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
+	modifiers  []func(*sql.Selector)
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
@@ -278,8 +278,8 @@ func (_q *LoaiVuKhiQuery) Clone() *LoaiVuKhiQuery {
 		predicates: append([]predicate.LoaiVuKhi{}, _q.predicates...),
 		withVuKhi:  _q.withVuKhi.Clone(),
 		// clone intermediate query.
-		sql:       _q.sql.Clone(),
-		path:      _q.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 		modifiers: append([]func(*sql.Selector){}, _q.modifiers...),
 	}
 }
@@ -301,12 +301,12 @@ func (_q *LoaiVuKhiQuery) WithVuKhi(opts ...func(*VuKhiQuery)) *LoaiVuKhiQuery {
 // Example:
 //
 //	var v []struct {
-//		TenLoai string `json:"ten_loai,omitempty"`
+//		TenLoaiVuKhi string `json:"ten_loai_vu_khi,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.LoaiVuKhi.Query().
-//		GroupBy(loaivukhi.FieldTenLoai).
+//		GroupBy(loaivukhi.FieldTenLoaiVuKhi).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *LoaiVuKhiQuery) GroupBy(field string, fields ...string) *LoaiVuKhiGroupBy {
@@ -324,11 +324,11 @@ func (_q *LoaiVuKhiQuery) GroupBy(field string, fields ...string) *LoaiVuKhiGrou
 // Example:
 //
 //	var v []struct {
-//		TenLoai string `json:"ten_loai,omitempty"`
+//		TenLoaiVuKhi string `json:"ten_loai_vu_khi,omitempty"`
 //	}
 //
 //	client.LoaiVuKhi.Query().
-//		Select(loaivukhi.FieldTenLoai).
+//		Select(loaivukhi.FieldTenLoaiVuKhi).
 //		Scan(ctx, &v)
 func (_q *LoaiVuKhiQuery) Select(fields ...string) *LoaiVuKhiSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
@@ -386,9 +386,6 @@ func (_q *LoaiVuKhiQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Lo
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -419,7 +416,7 @@ func (_q *LoaiVuKhiQuery) loadVuKhi(ctx context.Context, query *VuKhiQuery, node
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(vukhi.FieldMaLoai)
+		query.ctx.AppendFieldOnce(vukhi.FieldMaLoaiVuKhi)
 	}
 	query.Where(predicate.VuKhi(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(loaivukhi.VuKhiColumn), fks...))
@@ -429,10 +426,10 @@ func (_q *LoaiVuKhiQuery) loadVuKhi(ctx context.Context, query *VuKhiQuery, node
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.MaLoai
+		fk := n.MaLoaiVuKhi
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ma_loai" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "ma_loai_vu_khi" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -441,9 +438,6 @@ func (_q *LoaiVuKhiQuery) loadVuKhi(ctx context.Context, query *VuKhiQuery, node
 
 func (_q *LoaiVuKhiQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
 		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
@@ -506,9 +500,6 @@ func (_q *LoaiVuKhiQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, m := range _q.modifiers {
-		m(selector)
-	}
 	for _, p := range _q.predicates {
 		p(selector)
 	}
@@ -524,12 +515,6 @@ func (_q *LoaiVuKhiQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (_q *LoaiVuKhiQuery) Modify(modifiers ...func(s *sql.Selector)) *LoaiVuKhiSelect {
-	_q.modifiers = append(_q.modifiers, modifiers...)
-	return _q.Select()
 }
 
 // LoaiVuKhiGroupBy is the group-by builder for LoaiVuKhi entities.

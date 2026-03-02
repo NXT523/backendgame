@@ -80,13 +80,13 @@ func MoTa(v string) predicate.VuKhi {
 }
 
 // Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
-func Version(v int64) predicate.VuKhi {
+func Version(v int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldEQ(FieldVersion, v))
 }
 
-// MaLoai applies equality check predicate on the "ma_loai" field. It's identical to MaLoaiEQ.
-func MaLoai(v int) predicate.VuKhi {
-	return predicate.VuKhi(sql.FieldEQ(FieldMaLoai, v))
+// MaLoaiVuKhi applies equality check predicate on the "ma_loai_vu_khi" field. It's identical to MaLoaiVuKhiEQ.
+func MaLoaiVuKhi(v int) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldEQ(FieldMaLoaiVuKhi, v))
 }
 
 // MaDoHiem applies equality check predicate on the "ma_do_hiem" field. It's identical to MaDoHiemEQ.
@@ -360,63 +360,63 @@ func MoTaContainsFold(v string) predicate.VuKhi {
 }
 
 // VersionEQ applies the EQ predicate on the "version" field.
-func VersionEQ(v int64) predicate.VuKhi {
+func VersionEQ(v int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldEQ(FieldVersion, v))
 }
 
 // VersionNEQ applies the NEQ predicate on the "version" field.
-func VersionNEQ(v int64) predicate.VuKhi {
+func VersionNEQ(v int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldNEQ(FieldVersion, v))
 }
 
 // VersionIn applies the In predicate on the "version" field.
-func VersionIn(vs ...int64) predicate.VuKhi {
+func VersionIn(vs ...int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldIn(FieldVersion, vs...))
 }
 
 // VersionNotIn applies the NotIn predicate on the "version" field.
-func VersionNotIn(vs ...int64) predicate.VuKhi {
+func VersionNotIn(vs ...int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldNotIn(FieldVersion, vs...))
 }
 
 // VersionGT applies the GT predicate on the "version" field.
-func VersionGT(v int64) predicate.VuKhi {
+func VersionGT(v int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldGT(FieldVersion, v))
 }
 
 // VersionGTE applies the GTE predicate on the "version" field.
-func VersionGTE(v int64) predicate.VuKhi {
+func VersionGTE(v int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldGTE(FieldVersion, v))
 }
 
 // VersionLT applies the LT predicate on the "version" field.
-func VersionLT(v int64) predicate.VuKhi {
+func VersionLT(v int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldLT(FieldVersion, v))
 }
 
 // VersionLTE applies the LTE predicate on the "version" field.
-func VersionLTE(v int64) predicate.VuKhi {
+func VersionLTE(v int) predicate.VuKhi {
 	return predicate.VuKhi(sql.FieldLTE(FieldVersion, v))
 }
 
-// MaLoaiEQ applies the EQ predicate on the "ma_loai" field.
-func MaLoaiEQ(v int) predicate.VuKhi {
-	return predicate.VuKhi(sql.FieldEQ(FieldMaLoai, v))
+// MaLoaiVuKhiEQ applies the EQ predicate on the "ma_loai_vu_khi" field.
+func MaLoaiVuKhiEQ(v int) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldEQ(FieldMaLoaiVuKhi, v))
 }
 
-// MaLoaiNEQ applies the NEQ predicate on the "ma_loai" field.
-func MaLoaiNEQ(v int) predicate.VuKhi {
-	return predicate.VuKhi(sql.FieldNEQ(FieldMaLoai, v))
+// MaLoaiVuKhiNEQ applies the NEQ predicate on the "ma_loai_vu_khi" field.
+func MaLoaiVuKhiNEQ(v int) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldNEQ(FieldMaLoaiVuKhi, v))
 }
 
-// MaLoaiIn applies the In predicate on the "ma_loai" field.
-func MaLoaiIn(vs ...int) predicate.VuKhi {
-	return predicate.VuKhi(sql.FieldIn(FieldMaLoai, vs...))
+// MaLoaiVuKhiIn applies the In predicate on the "ma_loai_vu_khi" field.
+func MaLoaiVuKhiIn(vs ...int) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldIn(FieldMaLoaiVuKhi, vs...))
 }
 
-// MaLoaiNotIn applies the NotIn predicate on the "ma_loai" field.
-func MaLoaiNotIn(vs ...int) predicate.VuKhi {
-	return predicate.VuKhi(sql.FieldNotIn(FieldMaLoai, vs...))
+// MaLoaiVuKhiNotIn applies the NotIn predicate on the "ma_loai_vu_khi" field.
+func MaLoaiVuKhiNotIn(vs ...int) predicate.VuKhi {
+	return predicate.VuKhi(sql.FieldNotIn(FieldMaLoaiVuKhi, vs...))
 }
 
 // MaDoHiemEQ applies the EQ predicate on the "ma_do_hiem" field.

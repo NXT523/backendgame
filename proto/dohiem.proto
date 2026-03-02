@@ -1,0 +1,192 @@
+syntax = "proto3";
+
+package v1;
+option go_package = "game/proto/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+message DoHiem{
+  int32  ma_do_hiem        = 1;
+  string ten_do_hiem       = 2;
+  int32  so_luong          = 3;
+  string mau_sac           = 4;
+  double sat_thuong_bonus  = 5;
+  double toc_do_danh_bonus = 6;
+  int32  cap_bac           = 7;
+}
+
+message TaoDoHiemRequest{
+  int32  ma_do_hiem        = 1;
+  string ten_do_hiem       = 2;
+  int32  so_luong          = 3;
+  string mau_sac           = 4;
+  double sat_thuong_bonus  = 5;
+  double toc_do_danh_bonus = 6;
+  int32  cap_bac           = 7;
+}
+
+message CapNhatTheoTenDoHiemRequest {
+  string ten_do_hiem_new   = 1;
+  string ten_do_hiem       = 2;
+  int32  so_luong          = 3;
+  string mau_sac           = 4;
+  double sat_thuong_bonus  = 5;
+  double toc_do_danh_bonus = 6;
+  int32  cap_bac           = 7;
+}
+
+message XoaTheoTenDoHiemRequest {
+  string ten_do_hiem = 1;
+}
+
+message XoaTheoTenDoHiemResponse {
+  string deleted_name = 1;
+  int32  ma_do_hiem   = 2;
+}
+
+message DanhSachDoHiem{
+  int32           total      = 1;
+  int32           item_count = 2;
+  repeated DoHiem items      = 3;
+}
+
+message DanhSachIntDoHiem {
+  int32          total = 1;
+  repeated int32 items = 2;
+}
+
+message DanhSachStringDoHiem {
+  int32           total = 1;
+  repeated string items = 2;
+}
+
+message DanhSachDoubleDoHiem {
+  int32           total = 1;
+  repeated double items = 2;
+}
+
+message TimKiemDoHiemRequest {
+  google.protobuf.Int32Value ma_do_hiem  = 1;
+  string                     ten_do_hiem = 2;
+  string                     mau_sac     = 3;
+
+  google.protobuf.Int32Value min_ma_do_hiem = 5;
+  google.protobuf.Int32Value max_ma_do_hiem = 6;
+
+  // không cần số liên tiếp vì sau thay đổi sẽ bị phá vỡ nguyên tắc để số như này dễ mở rộng
+  // so_luong: bằng / hoặc theo range
+  google.protobuf.Int32Value so_luong     = 10;
+  google.protobuf.Int32Value min_so_luong = 11;
+  google.protobuf.Int32Value max_so_luong = 12;
+
+  // sat_thuong_bonus: bằng / hoặc theo range
+  google.protobuf.DoubleValue sat_thuong_bonus     = 20;
+  google.protobuf.DoubleValue min_sat_thuong_bonus = 21;
+  google.protobuf.DoubleValue max_sat_thuong_bonus = 22;
+
+  // toc_do_danh_bonus: bằng / hoặc theo range
+  google.protobuf.DoubleValue toc_do_danh_bonus     = 30;
+  google.protobuf.DoubleValue min_toc_do_danh_bonus = 31;
+  google.protobuf.DoubleValue max_toc_do_danh_bonus = 32;
+
+  // lọc theo cấp (không giới hạn range)
+  google.protobuf.Int32Value cap_bac     = 50;
+  google.protobuf.Int32Value min_cap_bac = 51;
+  google.protobuf.Int32Value max_cap_bac = 52;
+  repeated int32             ds_cap_bac  = 53;
+
+  string q = 40;
+  // ---- Phân trang (Pagination) ----
+  int32  limit  = 41;
+  string cursor = 42;
+
+  // ---- Sắp xếp (Ordering) ----
+  string arrange_asc  = 43;
+  string arrange_desc = 44;
+}
+
+// DoHiemService quản lý các thao tác CRUD và tìm kiếm Độ hiếm
+service DoHiemService{
+    // POST /dohiem/ent/post
+  rpc CreateDoHiem (TaoDoHiemRequest) returns (DoHiem){
+    option (google.api.http) = {
+      post: "/dohiem/ent/post"
+      body: "*"
+    };
+  }
+
+    // PUT /dohiem/ent/put-by-name/{ten_do_hiem_new}
+  rpc UpdateByNameDoHiem (CapNhatTheoTenDoHiemRequest) returns (DoHiem) {
+    option (google.api.http) = {
+      put : "/dohiem/ent/put-by-name/{ten_do_hiem_new}"
+      body: "*"
+    };
+  }
+
+  // DELETE /dohiem/ent/delete-by-name/{name}
+  rpc DeleteByNameDoHiem (XoaTheoTenDoHiemRequest) returns (XoaTheoTenDoHiemResponse) {
+    option (google.api.http) = {
+      delete: "/dohiem/ent/delete-by-name/{ten_do_hiem}"
+    };
+  }
+
+  // GET /dohiem/ent/getall?q=...
+  rpc GetAllDoHiem (google.protobuf.Empty) returns (DanhSachDoHiem) {
+    option (google.api.http) = {
+      get: "/dohiem/ent/getall"
+    };
+  }
+
+  // GET /dohiem/ent/ten
+  rpc GetAllTenDoHiem (google.protobuf.Empty) returns (DanhSachStringDoHiem) {
+    option (google.api.http) = {
+      get: "/dohiem/ent/ten"
+    };
+  }
+
+  // GET /dohiem/ent/soluong
+  rpc GetAllSoLuongDoHiem (google.protobuf.Empty) returns (DanhSachIntDoHiem) {
+    option (google.api.http) = {
+      get: "/dohiem/ent/soluong"
+    };
+  }
+
+  // GET /dohiem/ent/mausac
+  rpc GetAllMauSacDoHiem (google.protobuf.Empty) returns (DanhSachStringDoHiem) {
+    option (google.api.http) = {
+      get: "/dohiem/ent/mausac"
+    };
+  }
+
+  // GET /dohiem/ent/satthuongbonus
+  rpc GetAllSatThuongBonusDoHiem (google.protobuf.Empty) returns (DanhSachDoubleDoHiem) {
+    option (google.api.http) = {
+      get: "/dohiem/ent/satthuongbonus"
+    };
+  }
+
+  // GET /dohiem/ent/tocdodanhbonus
+  rpc GetAllTocDoDanhBonusDoHiem (google.protobuf.Empty) returns (DanhSachDoubleDoHiem) {
+    option (google.api.http) = {
+      get: "/dohiem/ent/tocdodanhbonus"
+    };
+  }
+
+  // GET /dohiem/ent/capbac
+  rpc GetAllCapBacDoHiem (google.protobuf.Empty) returns (DanhSachIntDoHiem) {
+    option (google.api.http) = {
+      get: "/dohiem/ent/capbac"
+    };
+  }
+
+  // POST /dohiem/ent/search
+  rpc SearchDoHiem (TimKiemDoHiemRequest) returns (DanhSachDoHiem) {
+    option (google.api.http) = {
+      post: "/dohiem/ent/search"
+      body: "*"
+    };
+  }
+
+}

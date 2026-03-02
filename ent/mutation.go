@@ -1388,18 +1388,18 @@ func (m *HeMutation) ResetEdge(name string) error {
 // LoaiVuKhiMutation represents an operation that mutates the LoaiVuKhi nodes in the graph.
 type LoaiVuKhiMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	ten_loai      *string
-	mo_ta         *string
-	clearedFields map[string]struct{}
-	vu_khi        map[int]struct{}
-	removedvu_khi map[int]struct{}
-	clearedvu_khi bool
-	done          bool
-	oldValue      func(context.Context) (*LoaiVuKhi, error)
-	predicates    []predicate.LoaiVuKhi
+	op              Op
+	typ             string
+	id              *int
+	ten_loai_vu_khi *string
+	mo_ta           *string
+	clearedFields   map[string]struct{}
+	vu_khi          map[int]struct{}
+	removedvu_khi   map[int]struct{}
+	clearedvu_khi   bool
+	done            bool
+	oldValue        func(context.Context) (*LoaiVuKhi, error)
+	predicates      []predicate.LoaiVuKhi
 }
 
 var _ ent.Mutation = (*LoaiVuKhiMutation)(nil)
@@ -1506,40 +1506,40 @@ func (m *LoaiVuKhiMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
-// SetTenLoai sets the "ten_loai" field.
-func (m *LoaiVuKhiMutation) SetTenLoai(s string) {
-	m.ten_loai = &s
+// SetTenLoaiVuKhi sets the "ten_loai_vu_khi" field.
+func (m *LoaiVuKhiMutation) SetTenLoaiVuKhi(s string) {
+	m.ten_loai_vu_khi = &s
 }
 
-// TenLoai returns the value of the "ten_loai" field in the mutation.
-func (m *LoaiVuKhiMutation) TenLoai() (r string, exists bool) {
-	v := m.ten_loai
+// TenLoaiVuKhi returns the value of the "ten_loai_vu_khi" field in the mutation.
+func (m *LoaiVuKhiMutation) TenLoaiVuKhi() (r string, exists bool) {
+	v := m.ten_loai_vu_khi
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldTenLoai returns the old "ten_loai" field's value of the LoaiVuKhi entity.
+// OldTenLoaiVuKhi returns the old "ten_loai_vu_khi" field's value of the LoaiVuKhi entity.
 // If the LoaiVuKhi object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *LoaiVuKhiMutation) OldTenLoai(ctx context.Context) (v string, err error) {
+func (m *LoaiVuKhiMutation) OldTenLoaiVuKhi(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldTenLoai is only allowed on UpdateOne operations")
+		return v, errors.New("OldTenLoaiVuKhi is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldTenLoai requires an ID field in the mutation")
+		return v, errors.New("OldTenLoaiVuKhi requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTenLoai: %w", err)
+		return v, fmt.Errorf("querying old value for OldTenLoaiVuKhi: %w", err)
 	}
-	return oldValue.TenLoai, nil
+	return oldValue.TenLoaiVuKhi, nil
 }
 
-// ResetTenLoai resets all changes to the "ten_loai" field.
-func (m *LoaiVuKhiMutation) ResetTenLoai() {
-	m.ten_loai = nil
+// ResetTenLoaiVuKhi resets all changes to the "ten_loai_vu_khi" field.
+func (m *LoaiVuKhiMutation) ResetTenLoaiVuKhi() {
+	m.ten_loai_vu_khi = nil
 }
 
 // SetMoTa sets the "mo_ta" field.
@@ -1680,8 +1680,8 @@ func (m *LoaiVuKhiMutation) Type() string {
 // AddedFields().
 func (m *LoaiVuKhiMutation) Fields() []string {
 	fields := make([]string, 0, 2)
-	if m.ten_loai != nil {
-		fields = append(fields, loaivukhi.FieldTenLoai)
+	if m.ten_loai_vu_khi != nil {
+		fields = append(fields, loaivukhi.FieldTenLoaiVuKhi)
 	}
 	if m.mo_ta != nil {
 		fields = append(fields, loaivukhi.FieldMoTa)
@@ -1694,8 +1694,8 @@ func (m *LoaiVuKhiMutation) Fields() []string {
 // schema.
 func (m *LoaiVuKhiMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case loaivukhi.FieldTenLoai:
-		return m.TenLoai()
+	case loaivukhi.FieldTenLoaiVuKhi:
+		return m.TenLoaiVuKhi()
 	case loaivukhi.FieldMoTa:
 		return m.MoTa()
 	}
@@ -1707,8 +1707,8 @@ func (m *LoaiVuKhiMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *LoaiVuKhiMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case loaivukhi.FieldTenLoai:
-		return m.OldTenLoai(ctx)
+	case loaivukhi.FieldTenLoaiVuKhi:
+		return m.OldTenLoaiVuKhi(ctx)
 	case loaivukhi.FieldMoTa:
 		return m.OldMoTa(ctx)
 	}
@@ -1720,12 +1720,12 @@ func (m *LoaiVuKhiMutation) OldField(ctx context.Context, name string) (ent.Valu
 // type.
 func (m *LoaiVuKhiMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case loaivukhi.FieldTenLoai:
+	case loaivukhi.FieldTenLoaiVuKhi:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetTenLoai(v)
+		m.SetTenLoaiVuKhi(v)
 		return nil
 	case loaivukhi.FieldMoTa:
 		v, ok := value.(string)
@@ -1792,8 +1792,8 @@ func (m *LoaiVuKhiMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *LoaiVuKhiMutation) ResetField(name string) error {
 	switch name {
-	case loaivukhi.FieldTenLoai:
-		m.ResetTenLoai()
+	case loaivukhi.FieldTenLoaiVuKhi:
+		m.ResetTenLoaiVuKhi()
 		return nil
 	case loaivukhi.FieldMoTa:
 		m.ResetMoTa()
@@ -1900,8 +1900,8 @@ type VuKhiMutation struct {
 	tam_danh             *int
 	addtam_danh          *int
 	mo_ta                *string
-	version              *int64
-	addversion           *int64
+	version              *int
+	addversion           *int
 	clearedFields        map[string]struct{}
 	loai                 *int
 	clearedloai          bool
@@ -2272,13 +2272,13 @@ func (m *VuKhiMutation) ResetMoTa() {
 }
 
 // SetVersion sets the "version" field.
-func (m *VuKhiMutation) SetVersion(i int64) {
+func (m *VuKhiMutation) SetVersion(i int) {
 	m.version = &i
 	m.addversion = nil
 }
 
 // Version returns the value of the "version" field in the mutation.
-func (m *VuKhiMutation) Version() (r int64, exists bool) {
+func (m *VuKhiMutation) Version() (r int, exists bool) {
 	v := m.version
 	if v == nil {
 		return
@@ -2289,7 +2289,7 @@ func (m *VuKhiMutation) Version() (r int64, exists bool) {
 // OldVersion returns the old "version" field's value of the VuKhi entity.
 // If the VuKhi object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VuKhiMutation) OldVersion(ctx context.Context) (v int64, err error) {
+func (m *VuKhiMutation) OldVersion(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
 	}
@@ -2304,7 +2304,7 @@ func (m *VuKhiMutation) OldVersion(ctx context.Context) (v int64, err error) {
 }
 
 // AddVersion adds i to the "version" field.
-func (m *VuKhiMutation) AddVersion(i int64) {
+func (m *VuKhiMutation) AddVersion(i int) {
 	if m.addversion != nil {
 		*m.addversion += i
 	} else {
@@ -2313,7 +2313,7 @@ func (m *VuKhiMutation) AddVersion(i int64) {
 }
 
 // AddedVersion returns the value that was added to the "version" field in this mutation.
-func (m *VuKhiMutation) AddedVersion() (r int64, exists bool) {
+func (m *VuKhiMutation) AddedVersion() (r int, exists bool) {
 	v := m.addversion
 	if v == nil {
 		return
@@ -2327,13 +2327,13 @@ func (m *VuKhiMutation) ResetVersion() {
 	m.addversion = nil
 }
 
-// SetMaLoai sets the "ma_loai" field.
-func (m *VuKhiMutation) SetMaLoai(i int) {
+// SetMaLoaiVuKhi sets the "ma_loai_vu_khi" field.
+func (m *VuKhiMutation) SetMaLoaiVuKhi(i int) {
 	m.loai = &i
 }
 
-// MaLoai returns the value of the "ma_loai" field in the mutation.
-func (m *VuKhiMutation) MaLoai() (r int, exists bool) {
+// MaLoaiVuKhi returns the value of the "ma_loai_vu_khi" field in the mutation.
+func (m *VuKhiMutation) MaLoaiVuKhi() (r int, exists bool) {
 	v := m.loai
 	if v == nil {
 		return
@@ -2341,25 +2341,25 @@ func (m *VuKhiMutation) MaLoai() (r int, exists bool) {
 	return *v, true
 }
 
-// OldMaLoai returns the old "ma_loai" field's value of the VuKhi entity.
+// OldMaLoaiVuKhi returns the old "ma_loai_vu_khi" field's value of the VuKhi entity.
 // If the VuKhi object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VuKhiMutation) OldMaLoai(ctx context.Context) (v int, err error) {
+func (m *VuKhiMutation) OldMaLoaiVuKhi(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldMaLoai is only allowed on UpdateOne operations")
+		return v, errors.New("OldMaLoaiVuKhi is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldMaLoai requires an ID field in the mutation")
+		return v, errors.New("OldMaLoaiVuKhi requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldMaLoai: %w", err)
+		return v, fmt.Errorf("querying old value for OldMaLoaiVuKhi: %w", err)
 	}
-	return oldValue.MaLoai, nil
+	return oldValue.MaLoaiVuKhi, nil
 }
 
-// ResetMaLoai resets all changes to the "ma_loai" field.
-func (m *VuKhiMutation) ResetMaLoai() {
+// ResetMaLoaiVuKhi resets all changes to the "ma_loai_vu_khi" field.
+func (m *VuKhiMutation) ResetMaLoaiVuKhi() {
 	m.loai = nil
 }
 
@@ -2443,7 +2443,7 @@ func (m *VuKhiMutation) SetLoaiID(id int) {
 // ClearLoai clears the "loai" edge to the LoaiVuKhi entity.
 func (m *VuKhiMutation) ClearLoai() {
 	m.clearedloai = true
-	m.clearedFields[vukhi.FieldMaLoai] = struct{}{}
+	m.clearedFields[vukhi.FieldMaLoaiVuKhi] = struct{}{}
 }
 
 // LoaiCleared reports if the "loai" edge to the LoaiVuKhi entity was cleared.
@@ -2609,7 +2609,7 @@ func (m *VuKhiMutation) Fields() []string {
 		fields = append(fields, vukhi.FieldVersion)
 	}
 	if m.loai != nil {
-		fields = append(fields, vukhi.FieldMaLoai)
+		fields = append(fields, vukhi.FieldMaLoaiVuKhi)
 	}
 	if m.do_hiem != nil {
 		fields = append(fields, vukhi.FieldMaDoHiem)
@@ -2637,8 +2637,8 @@ func (m *VuKhiMutation) Field(name string) (ent.Value, bool) {
 		return m.MoTa()
 	case vukhi.FieldVersion:
 		return m.Version()
-	case vukhi.FieldMaLoai:
-		return m.MaLoai()
+	case vukhi.FieldMaLoaiVuKhi:
+		return m.MaLoaiVuKhi()
 	case vukhi.FieldMaDoHiem:
 		return m.MaDoHiem()
 	case vukhi.FieldMaHe:
@@ -2664,8 +2664,8 @@ func (m *VuKhiMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldMoTa(ctx)
 	case vukhi.FieldVersion:
 		return m.OldVersion(ctx)
-	case vukhi.FieldMaLoai:
-		return m.OldMaLoai(ctx)
+	case vukhi.FieldMaLoaiVuKhi:
+		return m.OldMaLoaiVuKhi(ctx)
 	case vukhi.FieldMaDoHiem:
 		return m.OldMaDoHiem(ctx)
 	case vukhi.FieldMaHe:
@@ -2715,18 +2715,18 @@ func (m *VuKhiMutation) SetField(name string, value ent.Value) error {
 		m.SetMoTa(v)
 		return nil
 	case vukhi.FieldVersion:
-		v, ok := value.(int64)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVersion(v)
 		return nil
-	case vukhi.FieldMaLoai:
+	case vukhi.FieldMaLoaiVuKhi:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetMaLoai(v)
+		m.SetMaLoaiVuKhi(v)
 		return nil
 	case vukhi.FieldMaDoHiem:
 		v, ok := value.(int)
@@ -2809,7 +2809,7 @@ func (m *VuKhiMutation) AddField(name string, value ent.Value) error {
 		m.AddTamDanh(v)
 		return nil
 	case vukhi.FieldVersion:
-		v, ok := value.(int64)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -2869,8 +2869,8 @@ func (m *VuKhiMutation) ResetField(name string) error {
 	case vukhi.FieldVersion:
 		m.ResetVersion()
 		return nil
-	case vukhi.FieldMaLoai:
-		m.ResetMaLoai()
+	case vukhi.FieldMaLoaiVuKhi:
+		m.ResetMaLoaiVuKhi()
 		return nil
 	case vukhi.FieldMaDoHiem:
 		m.ResetMaDoHiem()

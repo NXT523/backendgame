@@ -89,8 +89,6 @@ func parseAndCheckMeta(md metadata.MD, expectedSlug string) ParsedMeta {
 	}
 }
 
-// ----------------- Interceptors -----------------
-
 // CommonAuthInterceptor: cho tất cả service khác
 func CommonAuthInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

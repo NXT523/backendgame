@@ -11,9 +11,9 @@ const (
 	// Label holds the string label denoting the loaivukhi type in the database.
 	Label = "loai_vu_khi"
 	// FieldID holds the string denoting the id field in the database.
-	FieldID = "ma_loai"
-	// FieldTenLoai holds the string denoting the ten_loai field in the database.
-	FieldTenLoai = "ten_loai"
+	FieldID = "ma_loai_vu_khi"
+	// FieldTenLoaiVuKhi holds the string denoting the ten_loai_vu_khi field in the database.
+	FieldTenLoaiVuKhi = "ten_loai_vu_khi"
 	// FieldMoTa holds the string denoting the mo_ta field in the database.
 	FieldMoTa = "mo_ta"
 	// EdgeVuKhi holds the string denoting the vu_khi edge name in mutations.
@@ -28,13 +28,13 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "vukhi" package.
 	VuKhiInverseTable = "vu_khis"
 	// VuKhiColumn is the table column denoting the vu_khi relation/edge.
-	VuKhiColumn = "ma_loai"
+	VuKhiColumn = "ma_loai_vu_khi"
 )
 
 // Columns holds all SQL columns for loaivukhi fields.
 var Columns = []string{
 	FieldID,
-	FieldTenLoai,
+	FieldTenLoaiVuKhi,
 	FieldMoTa,
 }
 
@@ -49,8 +49,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// TenLoaiValidator is a validator for the "ten_loai" field. It is called by the builders before save.
-	TenLoaiValidator func(string) error
+	// TenLoaiVuKhiValidator is a validator for the "ten_loai_vu_khi" field. It is called by the builders before save.
+	TenLoaiVuKhiValidator func(string) error
 	// MoTaValidator is a validator for the "mo_ta" field. It is called by the builders before save.
 	MoTaValidator func(string) error
 )
@@ -63,9 +63,9 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByTenLoai orders the results by the ten_loai field.
-func ByTenLoai(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldTenLoai, opts...).ToFunc()
+// ByTenLoaiVuKhi orders the results by the ten_loai_vu_khi field.
+func ByTenLoaiVuKhi(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenLoaiVuKhi, opts...).ToFunc()
 }
 
 // ByMoTa orders the results by the mo_ta field.

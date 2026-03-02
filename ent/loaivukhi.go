@@ -17,8 +17,8 @@ type LoaiVuKhi struct {
 	// ID of the ent.
 	// Mã loại vũ khí
 	ID int `json:"id,omitempty"`
-	// Tên loại
-	TenLoai string `json:"ten_loai,omitempty"`
+	// Tên loại vũ khí
+	TenLoaiVuKhi string `json:"ten_loai_vu_khi,omitempty"`
 	// Mô tả
 	MoTa string `json:"mo_ta,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -52,7 +52,7 @@ func (*LoaiVuKhi) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case loaivukhi.FieldID:
 			values[i] = new(sql.NullInt64)
-		case loaivukhi.FieldTenLoai, loaivukhi.FieldMoTa:
+		case loaivukhi.FieldTenLoaiVuKhi, loaivukhi.FieldMoTa:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -75,11 +75,11 @@ func (_m *LoaiVuKhi) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
-		case loaivukhi.FieldTenLoai:
+		case loaivukhi.FieldTenLoaiVuKhi:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field ten_loai", values[i])
+				return fmt.Errorf("unexpected type %T for field ten_loai_vu_khi", values[i])
 			} else if value.Valid {
-				_m.TenLoai = value.String
+				_m.TenLoaiVuKhi = value.String
 			}
 		case loaivukhi.FieldMoTa:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -128,8 +128,8 @@ func (_m *LoaiVuKhi) String() string {
 	var builder strings.Builder
 	builder.WriteString("LoaiVuKhi(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
-	builder.WriteString("ten_loai=")
-	builder.WriteString(_m.TenLoai)
+	builder.WriteString("ten_loai_vu_khi=")
+	builder.WriteString(_m.TenLoaiVuKhi)
 	builder.WriteString(", ")
 	builder.WriteString("mo_ta=")
 	builder.WriteString(_m.MoTa)

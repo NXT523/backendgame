@@ -54,9 +54,9 @@ func IDLTE(id int) predicate.LoaiVuKhi {
 	return predicate.LoaiVuKhi(sql.FieldLTE(FieldID, id))
 }
 
-// TenLoai applies equality check predicate on the "ten_loai" field. It's identical to TenLoaiEQ.
-func TenLoai(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldEQ(FieldTenLoai, v))
+// TenLoaiVuKhi applies equality check predicate on the "ten_loai_vu_khi" field. It's identical to TenLoaiVuKhiEQ.
+func TenLoaiVuKhi(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldEQ(FieldTenLoaiVuKhi, v))
 }
 
 // MoTa applies equality check predicate on the "mo_ta" field. It's identical to MoTaEQ.
@@ -64,69 +64,69 @@ func MoTa(v string) predicate.LoaiVuKhi {
 	return predicate.LoaiVuKhi(sql.FieldEQ(FieldMoTa, v))
 }
 
-// TenLoaiEQ applies the EQ predicate on the "ten_loai" field.
-func TenLoaiEQ(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldEQ(FieldTenLoai, v))
+// TenLoaiVuKhiEQ applies the EQ predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiEQ(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldEQ(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiNEQ applies the NEQ predicate on the "ten_loai" field.
-func TenLoaiNEQ(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldNEQ(FieldTenLoai, v))
+// TenLoaiVuKhiNEQ applies the NEQ predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiNEQ(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldNEQ(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiIn applies the In predicate on the "ten_loai" field.
-func TenLoaiIn(vs ...string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldIn(FieldTenLoai, vs...))
+// TenLoaiVuKhiIn applies the In predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiIn(vs ...string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldIn(FieldTenLoaiVuKhi, vs...))
 }
 
-// TenLoaiNotIn applies the NotIn predicate on the "ten_loai" field.
-func TenLoaiNotIn(vs ...string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldNotIn(FieldTenLoai, vs...))
+// TenLoaiVuKhiNotIn applies the NotIn predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiNotIn(vs ...string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldNotIn(FieldTenLoaiVuKhi, vs...))
 }
 
-// TenLoaiGT applies the GT predicate on the "ten_loai" field.
-func TenLoaiGT(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldGT(FieldTenLoai, v))
+// TenLoaiVuKhiGT applies the GT predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiGT(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldGT(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiGTE applies the GTE predicate on the "ten_loai" field.
-func TenLoaiGTE(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldGTE(FieldTenLoai, v))
+// TenLoaiVuKhiGTE applies the GTE predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiGTE(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldGTE(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiLT applies the LT predicate on the "ten_loai" field.
-func TenLoaiLT(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldLT(FieldTenLoai, v))
+// TenLoaiVuKhiLT applies the LT predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiLT(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldLT(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiLTE applies the LTE predicate on the "ten_loai" field.
-func TenLoaiLTE(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldLTE(FieldTenLoai, v))
+// TenLoaiVuKhiLTE applies the LTE predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiLTE(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldLTE(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiContains applies the Contains predicate on the "ten_loai" field.
-func TenLoaiContains(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldContains(FieldTenLoai, v))
+// TenLoaiVuKhiContains applies the Contains predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiContains(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldContains(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiHasPrefix applies the HasPrefix predicate on the "ten_loai" field.
-func TenLoaiHasPrefix(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldHasPrefix(FieldTenLoai, v))
+// TenLoaiVuKhiHasPrefix applies the HasPrefix predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiHasPrefix(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldHasPrefix(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiHasSuffix applies the HasSuffix predicate on the "ten_loai" field.
-func TenLoaiHasSuffix(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldHasSuffix(FieldTenLoai, v))
+// TenLoaiVuKhiHasSuffix applies the HasSuffix predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiHasSuffix(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldHasSuffix(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiEqualFold applies the EqualFold predicate on the "ten_loai" field.
-func TenLoaiEqualFold(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldEqualFold(FieldTenLoai, v))
+// TenLoaiVuKhiEqualFold applies the EqualFold predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiEqualFold(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldEqualFold(FieldTenLoaiVuKhi, v))
 }
 
-// TenLoaiContainsFold applies the ContainsFold predicate on the "ten_loai" field.
-func TenLoaiContainsFold(v string) predicate.LoaiVuKhi {
-	return predicate.LoaiVuKhi(sql.FieldContainsFold(FieldTenLoai, v))
+// TenLoaiVuKhiContainsFold applies the ContainsFold predicate on the "ten_loai_vu_khi" field.
+func TenLoaiVuKhiContainsFold(v string) predicate.LoaiVuKhi {
+	return predicate.LoaiVuKhi(sql.FieldContainsFold(FieldTenLoaiVuKhi, v))
 }
 
 // MoTaEQ applies the EQ predicate on the "mo_ta" field.

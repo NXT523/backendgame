@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package v1;
+option go_package = "game/proto/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+message He {
+  int32  ma_he  = 1;
+  string ten_he = 2;
+  string mo_ta  = 3;
+}
+
+message TaoHeRequest{
+  int32  ma_he  = 1;
+  string ten_he = 2;
+  string mo_ta  = 3;
+}
+
+message CapNhatTheoTenHeRequest {
+  string ten_he_new = 1;
+  string ten_he     = 2;
+  string mo_ta      = 3;
+}
+
+message XoaTheoTenHeRequest {
+  string ten_he = 1;
+}
+
+message XoaTheoTenHeResponse {
+  string deleted_name = 1;
+  int32  ma_he        = 2;
+}
+
+message DanhSachHe {
+  int32       total      = 1;
+  int32       item_count = 2;
+  repeated He items      = 3;
+}
+
+message DanhSachStringHe {
+  int32           total = 1;
+  repeated string items = 2;
+}
+
+message TimKiemHeRequest {
+  // ---- Tìm kiếm theo giá trị chính xác (Exact Match) ----
+  google.protobuf.Int32Value ma_he  = 1;
+  string                     ten_he = 2;
+  string                     mo_ta  = 3;
+
+  // ---- Tìm kiếm theo chuỗi (Like/Contains) ----
+  string q = 4;
+
+  // ---- Range Search (Dành cho ID hoặc các thuộc tính số nếu có) ----
+  google.protobuf.Int32Value min_ma_he = 5;
+  google.protobuf.Int32Value max_ma_he = 6;
+
+  // ---- Phân trang (Pagination) ----
+  int32  limit  = 10;
+  string cursor = 11;
+
+  // ---- Sắp xếp (Ordering) ----
+  string arrange_asc  = 12;
+  string arrange_desc = 13;
+}
+
+// HeService quản lý các thao tác CRUD và tìm kiếm Hệ
+service HeService {
+  // POST /he/ent/post
+  rpc CreateHe (TaoHeRequest) returns (He){
+    option (google.api.http) = {
+      post: "/he/ent/post"
+      body: "*"
+    };
+  }
+
+  // PUT /he/ent/put-by-name/{name}
+  rpc UpdateByNameHe (CapNhatTheoTenHeRequest) returns (He) {
+    option (google.api.http) = {
+      put : "/he/ent/put-by-name/{ten_he_new}"
+      body: "*"
+    };
+  }
+
+  // DELETE /he/ent/delete-by-name/{name}
+  rpc DeleteByNameHe (XoaTheoTenHeRequest) returns (XoaTheoTenHeResponse) {
+    option (google.api.http) = {
+      delete: "/he/ent/delete-by-name/{ten_he}"
+    };
+  }
+
+  // GET /he/ent/getall
+  rpc GetAllHe (google.protobuf.Empty) returns (DanhSachHe) {
+    option (google.api.http) = {
+      get: "/he/ent/getall"
+    };
+  }
+
+  // GET /he/ent/ten
+  rpc GetAllTenHe (google.protobuf.Empty) returns (DanhSachStringHe) {
+    option (google.api.http) = {
+      get: "/he/ent/ten"
+    };
+  }
+
+  // GET /he/ent/mota
+  rpc GetAllMoTaHe (google.protobuf.Empty) returns (DanhSachStringHe) {
+    option (google.api.http) = {
+      get: "/he/ent/mota"
+    };
+  }
+  // POST /he/ent/search
+  rpc SearchHe (TimKiemHeRequest) returns (DanhSachHe) {
+    option (google.api.http) = {
+      post: "/he/ent/search"
+      body: "*"
+    };
+  }
+}

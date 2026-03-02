@@ -85,22 +85,22 @@ func (_c *VuKhiCreate) SetNillableMoTa(v *string) *VuKhiCreate {
 }
 
 // SetVersion sets the "version" field.
-func (_c *VuKhiCreate) SetVersion(v int64) *VuKhiCreate {
+func (_c *VuKhiCreate) SetVersion(v int) *VuKhiCreate {
 	_c.mutation.SetVersion(v)
 	return _c
 }
 
 // SetNillableVersion sets the "version" field if the given value is not nil.
-func (_c *VuKhiCreate) SetNillableVersion(v *int64) *VuKhiCreate {
+func (_c *VuKhiCreate) SetNillableVersion(v *int) *VuKhiCreate {
 	if v != nil {
 		_c.SetVersion(*v)
 	}
 	return _c
 }
 
-// SetMaLoai sets the "ma_loai" field.
-func (_c *VuKhiCreate) SetMaLoai(v int) *VuKhiCreate {
-	_c.mutation.SetMaLoai(v)
+// SetMaLoaiVuKhi sets the "ma_loai_vu_khi" field.
+func (_c *VuKhiCreate) SetMaLoaiVuKhi(v int) *VuKhiCreate {
+	_c.mutation.SetMaLoaiVuKhi(v)
 	return _c
 }
 
@@ -235,8 +235,8 @@ func (_c *VuKhiCreate) check() error {
 	if _, ok := _c.mutation.Version(); !ok {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "VuKhi.version"`)}
 	}
-	if _, ok := _c.mutation.MaLoai(); !ok {
-		return &ValidationError{Name: "ma_loai", err: errors.New(`ent: missing required field "VuKhi.ma_loai"`)}
+	if _, ok := _c.mutation.MaLoaiVuKhi(); !ok {
+		return &ValidationError{Name: "ma_loai_vu_khi", err: errors.New(`ent: missing required field "VuKhi.ma_loai_vu_khi"`)}
 	}
 	if _, ok := _c.mutation.MaDoHiem(); !ok {
 		return &ValidationError{Name: "ma_do_hiem", err: errors.New(`ent: missing required field "VuKhi.ma_do_hiem"`)}
@@ -306,7 +306,7 @@ func (_c *VuKhiCreate) createSpec() (*VuKhi, *sqlgraph.CreateSpec) {
 		_node.MoTa = value
 	}
 	if value, ok := _c.mutation.Version(); ok {
-		_spec.SetField(vukhi.FieldVersion, field.TypeInt64, value)
+		_spec.SetField(vukhi.FieldVersion, field.TypeInt, value)
 		_node.Version = value
 	}
 	if nodes := _c.mutation.LoaiIDs(); len(nodes) > 0 {
@@ -323,7 +323,7 @@ func (_c *VuKhiCreate) createSpec() (*VuKhi, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.MaLoai = nodes[0]
+		_node.MaLoaiVuKhi = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.DoHiemIDs(); len(nodes) > 0 {

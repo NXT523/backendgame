@@ -3,29 +3,12 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"log"
-	"strings"
 	"time"
 
-	"game/internal/config"
+	"game/internal/utils"
 
 	"github.com/segmentio/kafka-go"
 )
-
-// tách "a,b,c" -> []string{"a","b","c"}, fallback mặc định
-func tachBrokers(s string) []string {
-	parts := strings.Split(s, ",")
-	out := make([]string, 0, len(parts))
-	for _, p := range parts {
-		if v := strings.TrimSpace(p); v != "" {
-			out = append(out, v)
-		}
-	}
-	if len(out) == 0 {
-		out = []string{"localhost:9093"}
-	}
-	return out
-}
 
 func TaoTopic(ctx context.Context, brokers []string, topic string, partitions, replication int) (bool, error) {
 	conn, err := kafka.Dial("tcp", brokers[0])
@@ -52,8 +35,7 @@ func TaoTopic(ctx context.Context, brokers []string, topic string, partitions, r
 	}
 	for _, p := range partitionsInfo {
 		if p.Topic == topic {
-			fmt.Printf("ℹ Topic '%s' đã tồn tại, bỏ qua tạo mới\n", topic)
-			return false, nil // trả về false = không tạo mới
+			return false, nil
 		}
 	}
 
@@ -71,56 +53,71 @@ func TaoTopic(ctx context.Context, brokers []string, topic string, partitions, r
 	return true, nil // trả về true = đã tạo
 }
 
-// ====== WRITER ======
 type KafkaWriters struct {
-	Created *kafka.Writer
-	Updated *kafka.Writer
+	writers map[KafkaWriterKey]*kafka.Writer
 }
+type KafkaWriterKey string
 
-// TaoKafkaWriters sẽ tạo sẵn 2 writer cho 2 topic cố định
-func TaoKafkaWriters(ctx context.Context, cfg config.CauHinh) (*KafkaWriters, error) {
-	createdWriter, err := taoWriter(ctx, cfg, cfg.KafkaTopicCreate, 3, cfg.KafkaReplication)
-	if err != nil {
-		return nil, err
+const (
+	KafkaCreate KafkaWriterKey = "create"
+	KafkaUpdate KafkaWriterKey = "update"
+)
+
+func TaoKafkaWriters() (*KafkaWriters, error) {
+	replication := utils.GetenvInt("KAFKA_REPLICATION", 1)
+
+	configs := map[KafkaWriterKey]struct {
+		topic     string
+		partition int
+	}{
+		KafkaCreate: {
+			topic:     utils.GetenvString("KAFKA_TOPIC_CREATE", ""),
+			partition: 3,
+		},
+		KafkaUpdate: {
+			topic:     utils.GetenvString("KAFKA_TOPIC_UPDATE", ""),
+			partition: 1,
+		},
 	}
 
-	updatedWriter, err := taoWriter(ctx, cfg, cfg.KafkaTopicUpdate, 1, cfg.KafkaReplication)
-	if err != nil {
-		createdWriter.Close()
-		return nil, err
+	writers := make(map[KafkaWriterKey]*kafka.Writer)
+
+	for key, cfg := range configs {
+		w, err := taoWriter(cfg.topic, cfg.partition, replication)
+		if err != nil {
+			for _, ww := range writers {
+				ww.Close()
+			}
+			return nil, err
+		}
+		writers[key] = w
 	}
 
-	return &KafkaWriters{
-		Created: createdWriter,
-		Updated: updatedWriter,
-	}, nil
+	return &KafkaWriters{writers: writers}, nil
 }
 
 // Hàm nội bộ dùng để tạo 1 writer cho topic cụ thể
-func taoWriter(ctx context.Context, cfg config.CauHinh, topic string, partitions, replication int) (*kafka.Writer, error) {
-	brokers := tachBrokers(cfg.KafkaBrokers)
+func taoWriter(topic string, partitions, replication int) (*kafka.Writer, error) {
+	brokers := utils.GetenvStrings("KAFKA_BROKERS", nil)
+	if len(brokers) == 0 {
+		brokers = []string{"localhost:9093"}
+	}
 
-	created, err := TaoTopic(ctx, brokers, topic, partitions, replication)
+	_, err := TaoTopic(context.Background(), brokers, topic, partitions, replication)
 	if err != nil {
 		return nil, err
 	}
-	if created {
-		log.Printf("[kafka] Topic '%s' được tạo (partitions=%d, replication=%d)\n", topic, partitions, replication)
-	} else {
-		log.Printf("[kafka] Topic '%s' đã tồn tại\n", topic)
+	if topic == "" {
+		return nil, fmt.Errorf("Kafka topic không được rỗng")
 	}
-
-	w := &kafka.Writer{
-		Addr:                   kafka.TCP(brokers...),
-		Topic:                  topic,
-		Balancer:               &kafka.Hash{},
-		RequiredAcks:           kafka.RequireAll,
-		AllowAutoTopicCreation: false,
-		WriteTimeout:           10 * time.Second,
-		ReadTimeout:            10 * time.Second,
-	}
-
-	return w, nil
+	return &kafka.Writer{
+		Addr:         kafka.TCP(brokers...),
+		Topic:        topic,
+		Balancer:     &kafka.Hash{},
+		RequiredAcks: kafka.RequireAll,
+		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  10 * time.Second,
+	}, nil
 }
 
 func XoaTopic(brokers []string, topic string) error {
@@ -151,4 +148,10 @@ func XoaTopic(brokers []string, topic string) error {
 
 	fmt.Printf("✅ Topic '%s' đã được xóa thành công\n", topic)
 	return nil
+}
+
+func (k *KafkaWriters) CloseAll() {
+	for _, w := range k.writers {
+		_ = w.Close()
+	}
 }

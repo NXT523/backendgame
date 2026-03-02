@@ -24,8 +24,8 @@ const (
 	FieldMoTa = "mo_ta"
 	// FieldVersion holds the string denoting the version field in the database.
 	FieldVersion = "version"
-	// FieldMaLoai holds the string denoting the ma_loai field in the database.
-	FieldMaLoai = "ma_loai"
+	// FieldMaLoaiVuKhi holds the string denoting the ma_loai_vu_khi field in the database.
+	FieldMaLoaiVuKhi = "ma_loai_vu_khi"
 	// FieldMaDoHiem holds the string denoting the ma_do_hiem field in the database.
 	FieldMaDoHiem = "ma_do_hiem"
 	// FieldMaHe holds the string denoting the ma_he field in the database.
@@ -37,7 +37,7 @@ const (
 	// EdgeHe holds the string denoting the he edge name in mutations.
 	EdgeHe = "he"
 	// LoaiVuKhiFieldID holds the string denoting the ID field of the LoaiVuKhi.
-	LoaiVuKhiFieldID = "ma_loai"
+	LoaiVuKhiFieldID = "ma_loai_vu_khi"
 	// DoHiemFieldID holds the string denoting the ID field of the DoHiem.
 	DoHiemFieldID = "ma_do_hiem"
 	// HeFieldID holds the string denoting the ID field of the He.
@@ -50,7 +50,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "loaivukhi" package.
 	LoaiInverseTable = "loai_vu_khis"
 	// LoaiColumn is the table column denoting the loai relation/edge.
-	LoaiColumn = "ma_loai"
+	LoaiColumn = "ma_loai_vu_khi"
 	// DoHiemTable is the table that holds the do_hiem relation/edge.
 	DoHiemTable = "vu_khis"
 	// DoHiemInverseTable is the table name for the DoHiem entity.
@@ -76,7 +76,7 @@ var Columns = []string{
 	FieldTamDanh,
 	FieldMoTa,
 	FieldVersion,
-	FieldMaLoai,
+	FieldMaLoaiVuKhi,
 	FieldMaDoHiem,
 	FieldMaHe,
 }
@@ -103,7 +103,7 @@ var (
 	// MoTaValidator is a validator for the "mo_ta" field. It is called by the builders before save.
 	MoTaValidator func(string) error
 	// DefaultVersion holds the default value on creation for the "version" field.
-	DefaultVersion int64
+	DefaultVersion int
 )
 
 // OrderOption defines the ordering options for the VuKhi queries.
@@ -144,9 +144,9 @@ func ByVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVersion, opts...).ToFunc()
 }
 
-// ByMaLoai orders the results by the ma_loai field.
-func ByMaLoai(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldMaLoai, opts...).ToFunc()
+// ByMaLoaiVuKhi orders the results by the ma_loai_vu_khi field.
+func ByMaLoaiVuKhi(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMaLoaiVuKhi, opts...).ToFunc()
 }
 
 // ByMaDoHiem orders the results by the ma_do_hiem field.

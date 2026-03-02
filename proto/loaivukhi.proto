@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package v1;
+option go_package = "game/proto/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+message LoaiVuKhi {
+  int32  ma_loai_vu_khi  = 1;
+  string ten_loai_vu_khi = 2;
+  string mo_ta           = 3;
+}
+
+message TaoLoaiVuKhiRequest{
+  int32  ma_loai_vu_khi  = 1;
+  string ten_loai_vu_khi = 2;
+  string mo_ta           = 3;
+}
+
+message CapNhatTheoTenLoaiVuKhiRequest {
+  string ten_loai_vu_khi_new = 1;
+  string ten_loai_vu_khi     = 2;
+  string mo_ta               = 3;
+}
+
+message XoaTheoTenLoaiVuKhiRequest {
+  string ten_loai_vu_khi = 1;
+}
+
+message XoaTheoTenLoaiVuKhiResponse {
+  string deleted_name   = 1;
+  int32  ma_loai_vu_khi = 2;
+}
+
+message DanhSachLoaiVuKhi {
+  int32              total      = 1;
+  int32              item_count = 2;
+  repeated LoaiVuKhi items      = 3;
+}
+
+message DanhSachStringLoaiVuKhi {
+  int32           total = 1;
+  repeated string items = 2;
+}
+
+message TimKiemLoaiVuKhiRequest {
+  google.protobuf.Int32Value ma_loai_vu_khi  = 1;
+  string                     ten_loai_vu_khi = 2;
+  string                     mo_ta           = 3;
+
+  // Pagination
+  int32  limit  = 10;
+  string cursor = 11;
+
+  google.protobuf.Int32Value min_ma_loai_vu_khi = 5;
+  google.protobuf.Int32Value max_ma_loai_vu_khi = 6;
+
+  // Ordering
+  string arrange_asc  = 20;
+  string arrange_desc = 21;
+}
+
+// LoaiVuKhiService quản lý các thao tác CRUD và tìm kiếm Loại vũ khí
+service LoaiVuKhiService {
+  // POST /loaivukhi/ent/post
+  rpc CreateLoaiVuKhi (TaoLoaiVuKhiRequest) returns (LoaiVuKhi){
+    option (google.api.http) = {
+      post: "/loaivukhi/ent/post"
+      body: "*"
+    };
+  }
+
+  // PUT /loaivukhi/ent/put-by-name/{name}
+  rpc UpdateByNameLoaiVuKhi (CapNhatTheoTenLoaiVuKhiRequest) returns (LoaiVuKhi) {
+    option (google.api.http) = {
+      put : "/loaivukhi/ent/put-by-name/{ten_loai_vu_khi_new}"
+      body: "*"
+    };
+  }
+
+  // DELETE /loaivukhi/ent/delete-by-name/{name}
+  rpc DeleteByNameLoaiVuKhi (XoaTheoTenLoaiVuKhiRequest) returns (XoaTheoTenLoaiVuKhiResponse) {
+    option (google.api.http) = {
+      delete: "/loaivukhi/ent/delete-by-name/{ten_loai_vu_khi}"
+    };
+  }
+
+  // GET /loaivukhi/ent/getall
+  rpc GetAllLoaiVuKhi (google.protobuf.Empty) returns (DanhSachLoaiVuKhi) {
+    option (google.api.http) = {
+      get: "/loaivukhi/ent/getall"
+    };
+  }
+
+  // GET /loaivukhi/ent/ten
+  rpc GetAllTenLoaiVuKhi (google.protobuf.Empty) returns (DanhSachStringLoaiVuKhi) {
+    option (google.api.http) = {
+      get: "/loaivukhi/ent/ten"
+    };
+  }
+
+  // GET /loaivukhi/ent/mota
+  rpc GetAllMoTaLoaiVuKhi (google.protobuf.Empty) returns (DanhSachStringLoaiVuKhi) {
+    option (google.api.http) = {
+      get: "/loaivukhi/ent/mota"
+    };
+  }
+
+  // POST /loaivukhi/ent/search
+  rpc SearchLoaiVuKhi (TimKiemLoaiVuKhiRequest) returns (DanhSachLoaiVuKhi) {
+    option (google.api.http) = {
+      post: "/loaivukhi/ent/search"
+      body: "*"
+    };
+  }
+}

@@ -51,7 +51,7 @@ func ChayConsumerVuKhiUpdate(ctx context.Context, entClient *ent.Client, elog *l
 			SetTocDoDanh(ev.TocDoDanh).
 			SetTamDanh(ev.TamDanh).
 			SetMoTa(ev.MoTa).
-			SetMaLoai(ev.MaLoai).
+			SetMaLoaiVuKhi(ev.MaLoai).
 			SetMaDoHiem(ev.MaDoHiem).
 			SetMaHe(ev.MaHe).
 			Save(ctx)
